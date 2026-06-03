@@ -148,6 +148,7 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
     <div class="step-label">Алхам 1 / 5 — Үндсэн мэдээлэл</div>
     <div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div>
     <div class="field"><label>Нэр, албан тушаал</label><input type="text" id="f_name" placeholder="Жишээ: Д.Болд, Санхүүгийн захирал" autocomplete="off"></div>
+    <div class="field"><label>Санал болгож буй төслийн нэр</label><input type="text" id="f_project" placeholder="Жишээ: Органик сүүн бүтээгдэхүүний шугам" autocomplete="off"></div>
     <div class="field"><label>Хэлтэс / Чиглэл</label>
       <select id="f_dept">
         <option value="">— сонгоно уу —</option>
@@ -487,7 +488,7 @@ function getRanking(){ return Array.from(document.querySelectorAll('#rankList .r
 function getPriority(){ return Array.from(document.querySelectorAll('#pfList .pf-input')).map(function(inp,i){ return (i+1)+'. '+(inp.value.trim()||'—'); }); }
 function getChoices(id){ return Array.from(document.querySelectorAll('#'+id+' .choice-item.sel')).map(function(e){ return e.textContent.trim(); }); }
 function getMatrix(){ return [['Санхүүгийн нөөц','r1'],['Технологи ба дэд бүтэц','r2'],['Хүний нөөц ба чадавх','r3'],['Зах зээлд эзлэх байр суурь','r4']].map(function(r){ var c=document.querySelector('input[name="'+r[1]+'"]:checked'); return {label:r[0],val:c?parseInt(c.value):0}; }); }
-function collectData(){ return {ts:new Date().toISOString(),name:gv('f_name'),dept:gv('f_dept'),ranking:getRanking(),matrix:getMatrix(),conds:getChoices('condGrid'),condExtra:gv('f_cond_extra'),priority:getPriority(),idea:gv('f_idea'),contrib:gv('f_contrib'),risk:gv('f_risk'),market:gv('f_market'),compete:gv('f_compete'),invest:gv('f_invest'),roi:gv('f_roi'),tech:gv('f_tech'),supply:gv('f_supply'),risks:getChoices('riskGrid'),riskExtra:gv('f_risk_extra'),riskmit:gv('f_riskmit'),esg:gv('f_esg'),extra:gv('f_extra')}; }
+function collectData(){ return {ts:new Date().toISOString(),name:gv('f_name'),project:gv('f_project'),dept:gv('f_dept'),ranking:getRanking(),matrix:getMatrix(),conds:getChoices('condGrid'),condExtra:gv('f_cond_extra'),priority:getPriority(),idea:gv('f_idea'),contrib:gv('f_contrib'),risk:gv('f_risk'),market:gv('f_market'),compete:gv('f_compete'),invest:gv('f_invest'),roi:gv('f_roi'),tech:gv('f_tech'),supply:gv('f_supply'),risks:getChoices('riskGrid'),riskExtra:gv('f_risk_extra'),riskmit:gv('f_riskmit'),esg:gv('f_esg'),extra:gv('f_extra')}; }
 
 /* ── review ── */
 function buildReview(){
@@ -495,6 +496,7 @@ function buildReview(){
   var cd=conds.map(esc).join(', ')+(ce?'<br><em>'+esc(ce)+'</em>':'');
   var rows=[
     ['Нэр / Албан тушаал',esc(gv('f_name'))||'—'],
+    ['Санал болгож буй төслийн нэр',esc(gv('f_project'))||'—'],
     ['Хэлтэс',esc(gv('f_dept'))||'—'],
     ['Чиглэлийн эрэмбэ',getRanking().map(esc).join('<br>')||'—'],
     ['Бэлэн байдал',getMatrix().map(function(m){ return esc(m.label)+': '+(m.val?m.val+'/5':'—'); }).join('<br>')],
@@ -535,7 +537,7 @@ window.submitForm = async function(){
 
 /* ── reset ── */
 window.resetForm = function(){
-  document.querySelectorAll('#mainForm input[type=text],#mainForm textarea,#mainForm select').forEach(function(el){ el.value=''; });
+  document.querySelectorAll('#mainForm input[type=text],#mainForm input[type=password],#mainForm textarea,#mainForm select').forEach(function(el){ el.value=''; });
   document.querySelectorAll('#mainForm input[type=radio]').forEach(function(el){ el.checked=false; });
   document.querySelectorAll('#mainForm .choice-item.sel').forEach(function(el){ el.classList.remove('sel'); });
   var list=$id('pfList'),phs=['Жишээ: Зах зээлийн судалгаа эхлүүлэх','Жишээ: Өрсөлдөх чадварын үнэлгээ хийх','Жишээ: Пилот төсөл хэрэгжүүлэх'];
@@ -549,7 +551,7 @@ window.doDownloadPDF = function(){
   var d=_lastData||collectData();
   var condStr=(d.conds||[]).join(', ')+(d.condExtra?'\nНэмэлт: '+d.condExtra:'');
   var riskStr=(d.risks||[]).join(', ')+(d.riskExtra?'\nНэмэлт: '+d.riskExtra:'');
-  var rows=[['Огноо',new Date(d.ts).toLocaleString('mn-MN')],['Нэр / Албан тушаал',d.name||'—'],['Хэлтэс',d.dept||'—'],['Чиглэлийн эрэмбэ',(d.ranking||[]).join('\n')],['Бэлэн байдал',(d.matrix||[]).map(function(m){ return m.label+': '+(m.val?m.val+'/5':'—'); }).join('\n')],['Амжилтын нөхцөл',condStr||'—'],['Яаралтай үйл ажиллагаа',(d.priority||[]).join('\n')],['Гол стратегийн санаа',d.idea||'—'],['Гол үнэ цэн',d.contrib||'—'],['Эрсдэл',d.risk||'—'],['Гол эрсдэлүүд',riskStr||'—'],['Эрсдэлийн арга хэмжээ',d.riskmit||'—'],['Зах зээл',d.market||'—'],['Өрсөлдөгч',d.compete||'—'],['Хөрөнгө оруулалт',d.invest||'—'],['ROI',d.roi||'—'],['Технологи',d.tech||'—'],['Нийлүүлэлт',d.supply||'—'],['ESG',d.esg||'—'],['Нэмэлт тайлбар',d.extra||'—']];
+  var rows=[['Огноо',new Date(d.ts).toLocaleString('mn-MN')],['Нэр / Албан тушаал',d.name||'—'],['Санал болгож буй төслийн нэр',d.project||'—'],['Хэлтэс',d.dept||'—'],['Чиглэлийн эрэмбэ',(d.ranking||[]).join('\n')],['Бэлэн байдал',(d.matrix||[]).map(function(m){ return m.label+': '+(m.val?m.val+'/5':'—'); }).join('\n')],['Амжилтын нөхцөл',condStr||'—'],['Яаралтай үйл ажиллагаа',(d.priority||[]).join('\n')],['Гол стратегийн санаа',d.idea||'—'],['Гол үнэ цэн',d.contrib||'—'],['Эрсдэл',d.risk||'—'],['Гол эрсдэлүүд',riskStr||'—'],['Эрсдэлийн арга хэмжээ',d.riskmit||'—'],['Зах зээл',d.market||'—'],['Өрсөлдөгч',d.compete||'—'],['Хөрөнгө оруулалт',d.invest||'—'],['ROI',d.roi||'—'],['Технологи',d.tech||'—'],['Нийлүүлэлт',d.supply||'—'],['ESG',d.esg||'—'],['Нэмэлт тайлбар',d.extra||'—']];
   var trs=rows.map(function(r){ var v=(r[1]||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); return '<tr><td style="width:33%;font-weight:700;color:#085041;padding:7px 10px;vertical-align:top;border-bottom:1px solid #e5e7eb;font-size:12px;background:#f0fdf8">'+r[0]+'</td><td style="padding:7px 10px;vertical-align:top;border-bottom:1px solid #e5e7eb;font-size:13px">'+v+'</td></tr>'; }).join('');
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>MFC3-'+(d.name||'Санал')+'</title><style>@page{margin:14mm 12mm}body{font-family:Arial,sans-serif;color:#111}h1{font-size:15px;margin:0 0 2px;color:#fff}table{width:100%;border-collapse:collapse}tr:last-child td{border-bottom:none!important}.hdr{background:linear-gradient(135deg,#085041,#1D9E75);padding:14px 18px;border-radius:6px;margin-bottom:14px}</style></head><body><div class="hdr"><h1>MFC 3.0 — Стратегийн Саналын Маягт</h1><p style="font-size:12px;color:rgba(255,255,255,.9);margin:3px 0 0">Монос Хүнс ХК · Удирдлагын баг</p></div><table>'+trs+'</table><script>window.onload=function(){window.print();}<\/script></body></html>';
   var blob=new Blob([html],{type:'text/html;charset=utf-8'});
@@ -596,6 +598,7 @@ async function renderAdmin(){
   h+='</div></div><div class="data-card"><div class="data-card-title">👥 Ирүүлсэн саналуудын жагсаалт</div>';
   all.forEach(function(s,i){
     h+='<div class="sub-row"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. '+esc(s.name||'—')+'</span><span style="font-size:11px;background:#f9fafb;padding:2px 8px;border-radius:10px;color:#6b7280">'+esc(s.dept||'—')+'</span></div>';
+    if(s.project) h+='<div style="font-size:12px;color:#1D9E75;font-weight:600;margin-bottom:2px">📋 '+esc(s.project)+'</div>';
     if(s.idea) h+='<div style="font-size:12px;color:#6b7280;line-height:1.5">'+esc((s.idea||'').substring(0,100))+((s.idea||'').length>100?'…':'')+'</div>';
     h+='<div style="font-size:11px;color:#9ca3af;margin-top:2px">'+new Date(s.ts).toLocaleString('mn-MN')+'</div></div>';
   });
