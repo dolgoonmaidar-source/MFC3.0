@@ -347,15 +347,17 @@ async function initBin(){ /* already hardcoded, nothing to do */ }
 
 async function loadAll(){
   var res = await fetch('https://api.jsonbin.io/v3/b/'+BIN_ID+'/latest',{
-    headers:{'X-Master-Key': API_KEY}
+    headers:{
+      'X-Master-Key': API_KEY,
+      'X-Access-Key': API_KEY
+    }
   });
   if(!res.ok) throw new Error('Дата уншиж чадсангүй: '+res.status);
   var j = await res.json();
   var rec = j.record;
-  if(Array.isArray(rec)) return rec;
-  // strip init placeholder
-  if(Array.isArray(rec) && rec.length===1 && rec[0].init) return [];
-  return [];
+  if(!Array.isArray(rec)) return [];
+  // filter out init placeholder
+  return rec.filter(function(r){ return !r.init; });
 }
 
 async function saveAll(arr){
@@ -363,7 +365,8 @@ async function saveAll(arr){
     method:'PUT',
     headers:{
       'Content-Type':'application/json',
-      'X-Master-Key': API_KEY
+      'X-Master-Key': API_KEY,
+      'X-Access-Key': API_KEY
     },
     body: JSON.stringify(arr)
   });
@@ -479,9 +482,27 @@ function collectData(){ return {ts:new Date().toISOString(),name:gv('f_name'),de
 function buildReview(){
   var conds=getChoices('condGrid'),ce=gv('f_cond_extra');
   var cd=conds.map(esc).join(', ')+(ce?'<br><em>'+esc(ce)+'</em>':'');
-  var rows=[['Нэр / Албан тушаал',esc(gv('f_name'))||'—'],['Хэлтэс',esc(gv('f_dept'))||'—'],['Чиглэлийн эрэмбэ',getRanking().map(esc).join('<br>')||'—'],['Бэлэн байдал',getMatrix().map(function(m){ return esc(m.label)+': '+(m.val?m.val+'/5':'—'); }).join('<br>')],['Амжилтын нөхцөл',cd||'—'],['Яаралтай үйл ажиллагаа',getPriority().map(esc).join('<br>')||'—'],['Гол санаа',esc((gv('f_idea')).substring(0,200))||'—'],['Гол үнэ цэн',esc((gv('f_contrib')).substring(0,150))||'—'],['Эрсдэл',esc((gv('f_risk')).substring(0,120))||'—'],['Нэмэлт эрсдэл',esc(gv('f_risk_extra'))||'—']];
+  var rows=[
+    ['Нэр / Албан тушаал',esc(gv('f_name'))||'—'],
+    ['Хэлтэс',esc(gv('f_dept'))||'—'],
+    ['Чиглэлийн эрэмбэ',getRanking().map(esc).join('<br>')||'—'],
+    ['Бэлэн байдал',getMatrix().map(function(m){ return esc(m.label)+': '+(m.val?m.val+'/5':'—'); }).join('<br>')],
+    ['Амжилтын нөхцөл',cd||'—'],
+    ['Яаралтай үйл ажиллагаа',getPriority().map(esc).join('<br>')||'—'],
+    ['Гол санаа',esc(gv('f_idea'))||'—'],
+    ['Гол үнэ цэн',esc(gv('f_contrib'))||'—'],
+    ['Эрсдэл',esc(gv('f_risk'))||'—'],
+    ['Нэмэлт эрсдэл',esc(gv('f_risk_extra'))||'—'],
+    ['Зах зээл',esc(gv('f_market'))||'—'],
+    ['Өрсөлдөгч',esc(gv('f_compete'))||'—'],
+    ['Хөрөнгө оруулалт',esc(gv('f_invest'))||'—'],
+    ['ROI',esc(gv('f_roi'))||'—'],
+    ['Технологи',esc(gv('f_tech'))||'—'],
+    ['Нийлүүлэлт',esc(gv('f_supply'))||'—'],
+    ['ESG',esc(gv('f_esg'))||'—'],
+  ];
   var html='<div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">Таны хариулт — нэг удаа шалгана уу</div>';
-  rows.forEach(function(r){ html+='<div class="rv-row"><div class="rv-key">'+r[0]+'</div><div class="rv-val">'+r[1]+'</div></div>'; });
+  rows.forEach(function(r){ html+='<div class="rv-row"><div class="rv-key">'+r[0]+'</div><div class="rv-val">'+(r[1]||'—')+'</div></div>'; });
   $id('reviewBox').innerHTML=html;
 }
 
