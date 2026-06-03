@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>MFC 3.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;background:#f3f4f6;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:12px}
+.view{display:none}.view.active{display:block}
+.sub-view{display:none}.sub-view.active{display:block}
+
+/* NAV */
+.nav-bar{display:flex;background:#fff;border-radius:10px 10px 0 0;border:1px solid #e5e7eb;border-bottom:none;margin-bottom:0;overflow:hidden}
+.nav-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 8px;font-size:13px;font-weight:600;cursor:pointer;color:#6b7280;border-bottom:3px solid transparent;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.nav-tab.active{color:#1D9E75;border-bottom-color:#1D9E75;background:#f0fdf8}
+.nav-sep{height:1px;background:#e5e7eb;margin-bottom:14px}
+
+/* HEADER */
+.app-header{background:linear-gradient(135deg,#085041,#0F6E56 60%,#1D9E75);border-radius:12px;padding:20px;margin-bottom:14px;position:relative;overflow:hidden}
+.header-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);color:#fff;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;margin-bottom:10px}
+.app-header h1{font-size:19px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.35}
+.app-header p{font-size:13px;color:rgba(255,255,255,.88);line-height:1.6}
+.deadline-strip{display:inline-flex;align-items:center;gap:7px;margin-top:12px;background:rgba(255,255,255,.15);border-radius:8px;padding:7px 13px}
+.deadline-strip span{font-size:12px;color:rgba(255,255,255,.9)}
+.deadline-strip strong{color:#FAC775}
+
+/* INFO GRID */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.info-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+.ic-icon{font-size:20px;margin-bottom:5px}
+.ic-label{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.ic-val{font-size:12px;font-weight:600;color:#111827;line-height:1.4}
+
+/* CARD */
+.card{background:#fff;border-radius:0 0 12px 12px;border:1px solid #e5e7eb;border-top:none;padding:16px;margin-bottom:14px}
+.card-plain{background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:16px;margin-bottom:14px}
+
+/* STEPS */
+.step-label{font-size:11px;font-weight:700;color:#6b7280;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.progress-bar{height:5px;background:#e5e7eb;border-radius:5px;margin-bottom:16px;overflow:hidden}
+.progress-fill{height:100%;background:#1D9E75;border-radius:5px;transition:width .35s ease}
+
+/* FIELDS */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:700;color:#111827;margin-bottom:4px}
+.field .hint{font-size:12px;color:#6b7280;margin-bottom:6px;line-height:1.5}
+.field input[type=text],.field input[type=password],.field textarea,.field select{width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;color:#111827;background:#fff;resize:vertical;-webkit-appearance:none;appearance:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+.field textarea{min-height:75px}
+.section-title{font-size:11px;font-weight:700;color:#6b7280;letter-spacing:.05em;text-transform:uppercase;margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}
+
+/* MATRIX */
+.matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.matrix-table{width:100%;border-collapse:collapse;font-size:12px;min-width:300px}
+.matrix-table th{font-weight:700;padding:8px 6px;text-align:center;background:#f9fafb;color:#6b7280;border:1px solid #e5e7eb}
+.matrix-table th:first-child{text-align:left;min-width:110px}
+.matrix-table td{padding:8px 6px;border:1px solid #e5e7eb;text-align:center}
+.matrix-table td:first-child{text-align:left;font-weight:600;font-size:12px;background:#fafafa}
+.matrix-table input[type=radio]{accent-color:#1D9E75;width:18px;height:18px;cursor:pointer}
+
+/* RANK */
+.rank-list{display:flex;flex-direction:column;gap:6px}
+.rank-item{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;cursor:grab;user-select:none;font-size:13px;color:#111827;touch-action:none;-webkit-tap-highlight-color:transparent}
+.rank-item.dragging{opacity:.35;border-style:dashed}
+.rank-item.drag-over{border-color:#1D9E75;background:#f0fdf8}
+.rank-num{width:22px;height:22px;border-radius:50%;background:#1D9E75;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.drag-handle{color:#9ca3af;font-size:16px;flex-shrink:0;line-height:1}
+.other-input{flex:1;border:1px solid #d1d5db;border-radius:6px;padding:5px 9px;font-size:13px;font-family:inherit;color:#111827;min-width:0}
+
+/* CHOICES */
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.choice-item{border:1.5px solid #d1d5db;border-radius:8px;padding:10px 12px;cursor:pointer;font-size:13px;color:#111827;line-height:1.4;text-align:left;user-select:none;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.choice-item:active{transform:scale(.97)}
+.choice-item.sel{border-color:#1D9E75;background:#e6f7f1;color:#085041;font-weight:700}
+
+/* PRIORITY FREE */
+.pf-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.pf-item{display:flex;align-items:center;gap:8px}
+.pf-num{width:22px;height:22px;border-radius:50%;background:#185FA5;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pf-input{flex:1;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;color:#111827;background:#fff;-webkit-appearance:none}
+.pf-input:focus{outline:none;border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,.1)}
+.add-row-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#185FA5;cursor:pointer;background:none;border:1.5px dashed #185FA5;border-radius:8px;padding:7px 14px;font-family:inherit;-webkit-tap-highlight-color:transparent}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:1.5px solid #d1d5db;background:#fff;color:#111827;font-family:inherit;-webkit-tap-highlight-color:transparent;min-height:44px;touch-action:manipulation;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.btn-primary:active{background:#0F6E56}
+.btn-blue{background:#185FA5;border-color:#185FA5;color:#fff}
+.btn-danger{background:#D85A30;border-color:#D85A30;color:#fff}
+.btn-full{width:100%;justify-content:center}
+
+/* REVIEW */
+.review-box{background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;padding:14px;margin-bottom:12px}
+.rv-row{display:flex;flex-direction:column;border-bottom:1px solid #e5e7eb;padding:7px 0}
+.rv-row:last-child{border-bottom:none}
+.rv-key{font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.rv-val{font-size:13px;color:#111827;line-height:1.6}
+
+/* SUCCESS */
+.success-wrap{text-align:center;padding:24px 8px}
+.success-icon{font-size:52px;margin-bottom:12px}
+.success-steps{background:#f9fafb;border-radius:10px;padding:14px;text-align:left;margin:14px 0;border:1px solid #e5e7eb}
+.step-line{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#111827;padding:5px 0;line-height:1.5}
+.step-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0;margin-top:4px}
+
+/* ADMIN STATS */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.stat-card{background:#f9fafb;border-radius:8px;padding:12px;text-align:center;border:1px solid #e5e7eb}
+.stat-num{font-size:26px;font-weight:700;color:#111827}
+.stat-lbl{font-size:11px;color:#6b7280;margin-top:2px}
+.data-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:10px}
+.data-card-title{font-size:13px;font-weight:700;color:#111827;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.bar-row{margin-bottom:9px}
+.bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.bar-score{font-size:11px;color:#6b7280}
+.bar-track{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.bar-fill-g{height:6px;background:#1D9E75;border-radius:3px}
+.bar-fill-b{height:6px;background:#185FA5;border-radius:3px}
+.count-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid #e5e7eb}
+.count-row:last-child{border-bottom:none}
+.badge-g{font-weight:700;color:#085041;background:#e6f7f1;padding:2px 8px;border-radius:10px;font-size:11px}
+.badge-r{font-weight:700;color:#4A1B0C;background:#FAECE7;padding:2px 8px;border-radius:10px;font-size:11px}
+.sub-row{border-bottom:1px solid #e5e7eb;padding:10px 0}
+.sub-row:last-child{border-bottom:none}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;font-size:13px;padding:10px 22px;border-radius:8px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;max-width:90vw;text-align:center;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* LOCK */
+.lock-screen{display:flex;flex-direction:column;align-items:center;padding:40px 12px;text-align:center}
+.lock-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;width:100%;max-width:340px}
+.lock-card h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.lock-card p{font-size:13px;color:#6b7280;margin-bottom:14px}
+.lock-err{font-size:12px;color:#D85A30;margin-top:6px;display:none}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:#6b7280;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- NAV -->
+<div class="nav-bar" id="mainNav">
+  <div class="nav-tab active" id="tabForm" onclick="switchMain('form')">✏️ Санал өгөх</div>
+  <div class="nav-tab" id="tabAdmin" onclick="switchMain('admin')">📊 Админ</div>
+</div>
+<div class="nav-sep"></div>
+
+<!-- ═══ FORM ═══ -->
+<div id="mainForm" class="sub-view active">
+
+<!-- PG0 -->
+<div id="pg0" class="view active">
+  <div class="app-header">
+    <div class="header-badge">🌿 MFC 3.0 · 2025–2035</div>
+    <h1>Эрүүл мэндийн хүнс үйлдвэрлэл стратегийн санал</h1>
+    <p>Монос Хүнс ХК-ийн ирэх 10 жилийн стратегийн чиглэлийг тодорхойлох зорилгоор удирдлагын баг бүрийн санал, үнэлгээг авч байна.</p>
+    <div class="deadline-strip">⏰ <span>Хугацаа: <strong>2026 оны 06-р сарын 05, Баасан</strong></span></div>
+  </div>
+  <div class="info-grid">
+    <div class="info-card"><div class="ic-icon">💡</div><div class="ic-label">Яагаад?</div><div class="ic-val">Дэлхийн зах зээл 2030 он гэхэд $1.2 их наяд</div></div>
+    <div class="info-card"><div class="ic-icon">📈</div><div class="ic-label">Өсөлт</div><div class="ic-val">Жил бүр 8.5% өсч байгаа хурдтай зах зээл</div></div>
+    <div class="info-card"><div class="ic-icon">🎯</div><div class="ic-label">Зорилт</div><div class="ic-val">2035 он гэхэд тэргүүлэх 3 байрт орох</div></div>
+    <div class="info-card"><div class="ic-icon">👥</div><div class="ic-label">Хамрах хүрээ</div><div class="ic-val">Удирдлагын 17 гишүүний байр суурь</div></div>
+  </div>
+  <button class="btn btn-primary btn-full" onclick="goPage(1)">Маягтыг эхлэх →</button>
+</div>
+
+<!-- PG1 -->
+<div id="pg1" class="view">
+  <div class="card">
+    <div class="step-label">Алхам 1 / 5 — Үндсэн мэдээлэл</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div>
+    <div class="field"><label>Нэр, албан тушаал</label><input type="text" id="f_name" placeholder="Жишээ: Д.Болд, Санхүүгийн захирал" autocomplete="off"></div>
+    <div class="field"><label>Хэлтэс / Чиглэл</label>
+      <select id="f_dept">
+        <option value="">— сонгоно уу —</option>
+        <option>ЭБХА</option><option>ЗХНА</option><option>ХАБЭА</option><option>ХААА</option>
+        <option>СА</option><option>ЛА</option><option>БА</option><option>МА</option>
+        <option>ШХҮ</option><option>ХХҮ</option><option>ЧБА</option><option>ЧХЛ</option><option>ИТА</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goPage(0)">← Буцах</button>
+      <button class="btn btn-primary" onclick="goPage(2)">Үргэлжлүүлэх →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PG2 -->
+<div id="pg2" class="view">
+  <div class="card">
+    <div class="step-label">Алхам 2 / 5 — Стратегийн чиглэлийн эрэмбэ</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+    <div class="field">
+      <label>Аль чиглэлийг эн тэргүүнд авч үзэх ёстой вэ?</label>
+      <div class="hint">⠿ Чухалаас чухал бишрүү чирж эрэмбэлнэ үү</div>
+      <div class="rank-list" id="rankList">
+        <div class="rank-item" data-val="Органик бүтээгдэхүүн"><span class="drag-handle">⠿</span><span class="rank-num">1</span><span>Органик бүтээгдэхүүн</span></div>
+        <div class="rank-item" data-val="Сахаргүй хүнс"><span class="drag-handle">⠿</span><span class="rank-num">2</span><span>Сахаргүй хүнс</span></div>
+        <div class="rank-item" data-val="Ургамлын гаралтай"><span class="drag-handle">⠿</span><span class="rank-num">3</span><span>Ургамлын гаралтай</span></div>
+        <div class="rank-item" data-val="Функциональ хүнс"><span class="drag-handle">⠿</span><span class="rank-num">4</span><span>Функциональ хүнс</span></div>
+        <div class="rank-item" data-val="Тусгай зорилтот хүнс"><span class="drag-handle">⠿</span><span class="rank-num">5</span><span>Тусгай зорилтот хүнс</span></div>
+        <div class="rank-item" data-val="__other__"><span class="drag-handle">⠿</span><span class="rank-num">6</span><span style="color:#6b7280;margin-right:5px">Бусад:</span><input class="other-input" id="f_other" type="text" placeholder="Нэмэлт чиглэл..."></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Компани хэр бэлэн гэж үнэлж байна вэ?</label>
+      <div class="hint">1 = Огт бэлэн биш · 5 = Бүрэн бэлэн</div>
+      <div class="matrix-wrap">
+        <table class="matrix-table">
+          <thead><tr><th>Хүчин зүйл</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead>
+          <tbody>
+            <tr><td>Санхүүгийн нөөц</td><td><input type="radio" name="r1" value="1"></td><td><input type="radio" name="r1" value="2"></td><td><input type="radio" name="r1" value="3"></td><td><input type="radio" name="r1" value="4"></td><td><input type="radio" name="r1" value="5"></td></tr>
+            <tr><td>Технологи ба дэд бүтэц</td><td><input type="radio" name="r2" value="1"></td><td><input type="radio" name="r2" value="2"></td><td><input type="radio" name="r2" value="3"></td><td><input type="radio" name="r2" value="4"></td><td><input type="radio" name="r2" value="5"></td></tr>
+            <tr><td>Хүний нөөц ба чадавх</td><td><input type="radio" name="r3" value="1"></td><td><input type="radio" name="r3" value="2"></td><td><input type="radio" name="r3" value="3"></td><td><input type="radio" name="r3" value="4"></td><td><input type="radio" name="r3" value="5"></td></tr>
+            <tr><td>Зах зээлд эзлэх байр суурь</td><td><input type="radio" name="r4" value="1"></td><td><input type="radio" name="r4" value="2"></td><td><input type="radio" name="r4" value="3"></td><td><input type="radio" name="r4" value="4"></td><td><input type="radio" name="r4" value="5"></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goPage(1)">← Буцах</button>
+      <button class="btn btn-primary" onclick="goPage(3)">Үргэлжлүүлэх →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PG3 -->
+<div id="pg3" class="view">
+  <div class="card">
+    <div class="step-label">Алхам 3 / 5 — Санаа, үнэ цэн ба эрсдэл</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div>
+    <div class="field"><label>Таны гол стратегийн санаа</label><textarea id="f_idea" placeholder="Жишээ: Монголын уламжлалт бүтээгдэхүүнийг ашиглан дэлхийн зах зээлд нэвтрэх..."></textarea></div>
+    <div class="field"><label>Энэхүү төслийг хэрэгжүүлснээр үүсэх гол үнэ цэн</label><textarea id="f_contrib" placeholder="Жишээ: Шинэ сегментийн орлого, брэндийн нэр хүнд, экспортын боломж..."></textarea></div>
+    <div class="field"><label>Хамгийн том эрсдэл эсвэл санаа зовоосон зүйл</label><textarea id="f_risk" placeholder="Жишээ: Зах зээлийн судалгааны хомсдол..."></textarea></div>
+    <div class="field">
+      <label>Амжилтанд хүрэхэд зайлшгүй шаардагдах нөхцөл</label>
+      <div class="hint">Нэгээс олон сонгож болно</div>
+      <div class="choice-grid" id="condGrid">
+        <div class="choice-item" onclick="toggleCh(this)">Гадаад хөрөнгө оруулагч</div>
+        <div class="choice-item" onclick="toggleCh(this)">Засгийн газрын дэмжлэг</div>
+        <div class="choice-item" onclick="toggleCh(this)">Технологийн түнш</div>
+        <div class="choice-item" onclick="toggleCh(this)">Дотоод чадавхийн сургалт</div>
+        <div class="choice-item" onclick="toggleCh(this)">Зах зээлийн нарийвчилсан судалгаа</div>
+        <div class="choice-item" onclick="toggleCh(this)">Туршилтын пилот төсөл</div>
+      </div>
+      <textarea id="f_cond_extra" style="margin-top:8px" placeholder="Нэмэлт нөхцөл эсвэл тайлбараа энд бичнэ үү..."></textarea>
+    </div>
+    <div class="field">
+      <label>Төсөл хэрэгжүүлэхэд хамгийн яаралтай хийх шаардлагатай зүйлсийг нэрлэ.</label>
+      <div class="hint">Хамгийн яаралтайг дээд мөрөнд бичнэ үү</div>
+      <div class="pf-list" id="pfList">
+        <div class="pf-item"><span class="pf-num">1</span><input class="pf-input" type="text" placeholder="Жишээ: Зах зээлийн судалгаа эхлүүлэх"></div>
+        <div class="pf-item"><span class="pf-num">2</span><input class="pf-input" type="text" placeholder="Жишээ: Өрсөлдөх чадварын үнэлгээ хийх"></div>
+        <div class="pf-item"><span class="pf-num">3</span><input class="pf-input" type="text" placeholder="Жишээ: Пилот төсөл хэрэгжүүлэх"></div>
+      </div>
+      <button class="add-row-btn" onclick="addPfRow()">+ Мөр нэмэх</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goPage(2)">← Буцах</button>
+      <button class="btn btn-primary" onclick="goPage(4)">Үргэлжлүүлэх →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PG4 -->
+<div id="pg4" class="view">
+  <div class="card">
+    <div class="step-label">Алхам 4 / 5 — Техник эдийн засгийн үндэслэл</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+    <div class="section-title">Зах зээлийн боломжийн үнэлгээ</div>
+    <div class="field"><label>Зорьж буй зах зээлийн хэмжээ ба өсөлтийн хандлага</label><textarea id="f_market" placeholder="Жишээ: Дотоодын зах зээл жилд ~50 тэрбум төгрөг..."></textarea></div>
+    <div class="field"><label>Гол өрсөлдөгчид ба Монос Хүнс ХК-ийн давуу тал</label><textarea id="f_compete" placeholder="Жишээ: Гол өрсөлдөгч — X компани (30% зах зээл)..."></textarea></div>
+    <div class="section-title">Санхүүгийн таамаглал</div>
+    <div class="field"><label>Хөрөнгө оруулалтын хэрэгцээний тооцоо</label><textarea id="f_invest" placeholder="Жишээ: Нийт ~5 тэрбум төгрөг..."></textarea></div>
+    <div class="field"><label>Орлогын таамаглал ба нөхөлтийн хугацаа (ROI)</label><textarea id="f_roi" placeholder="Жишээ: 3 жилийн дараа жилийн орлого ~2 тэрбум..."></textarea></div>
+    <div class="section-title">Хэрэгжилтийн боломж ба эрсдэл</div>
+    <div class="field"><label>Техникийн бэлэн байдал ба технологийн шийдэл</label><textarea id="f_tech" placeholder="Жишээ: GMP сертификат шаардлагатай..."></textarea></div>
+    <div class="field"><label>Нийлүүлэлтийн сүлжээний бэлэн байдал</label><textarea id="f_supply" placeholder="Жишээ: Органик гэрчилгээтэй нийлүүлэгч 2 бий..."></textarea></div>
+    <div class="field">
+      <label>Гол эрсдэлүүд</label>
+      <div class="choice-grid" id="riskGrid" style="margin-bottom:8px">
+        <div class="choice-item" onclick="toggleCh(this)">Зах зээлийн хэрэлцээ буурах</div>
+        <div class="choice-item" onclick="toggleCh(this)">Санхүүжилтийн дутагдал</div>
+        <div class="choice-item" onclick="toggleCh(this)">Технологийн хоцрогдол</div>
+        <div class="choice-item" onclick="toggleCh(this)">Нийлүүлэлтийн тасалдал</div>
+        <div class="choice-item" onclick="toggleCh(this)">Зохицуулалтын өөрчлөлт</div>
+        <div class="choice-item" onclick="toggleCh(this)">Өрсөлдөөний даралт</div>
+      </div>
+      <textarea id="f_risk_extra" placeholder="Нэмэлт эрсдэл..." style="margin-bottom:8px"></textarea>
+      <textarea id="f_riskmit" placeholder="Эрсдэлүүдэд хариу арга хэмжээг дэлгэрэнгүй бичнэ үү..."></textarea>
+    </div>
+    <div class="field"><label>Тогтвортой хөгжил ба ESG үнэлгээ</label><textarea id="f_esg" placeholder="Жишээ: Органик үйлдвэрлэл хөрс бохирдуулалтыг 30% бууруулна..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn" onclick="goPage(3)">← Буцах</button>
+      <button class="btn btn-primary" onclick="goPage(5)">Хянах ба илгээх →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PG5 -->
+<div id="pg5" class="view">
+  <div class="card">
+    <div class="step-label">Алхам 5 / 5 — Хянаад илгээх</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="review-box" id="reviewBox"></div>
+    <div class="field"><label>Нэмэлт тайлбар <span style="font-weight:400;color:#6b7280">(заавал биш)</span></label><textarea id="f_extra" placeholder="Зохион байгуулагчид хувийн журмаар дамжуулах мэдээлэл..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn" onclick="goPage(4)">← Буцах</button>
+      <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">📤 Санал илгээх</button>
+    </div>
+  </div>
+</div>
+
+<!-- PG6 -->
+<div id="pg6" class="view">
+  <div class="card-plain">
+    <div class="success-wrap">
+      <div class="success-icon">✅</div>
+      <h2 style="font-size:18px;font-weight:700;margin-bottom:6px">Санал амжилттай хүлээн авлаа</h2>
+      <p style="font-size:13px;color:#6b7280">Таны үнэлгээ нэгтгэгдэж, 2026 оны 06-р сарын 09, Мягмар гарагт Retreat 2026 HY-д танилцуулна.</p>
+      <div class="success-steps">
+        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Дараагийн алхамууд</div>
+        <div class="step-line"><div class="step-dot"></div><span><strong>06/05 Баасан</strong> — Бүх саналыг нэгтгэн боловсруулах</span></div>
+        <div class="step-line"><div class="step-dot"></div><span><strong>06/09 Мягмар</strong> — Retreat 2026 HY-д танилцуулах</span></div>
+        <div class="step-line"><div class="step-dot"></div><span>MFC 3.0 төслийг албан ёсоор эхлүүлэх</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-blue btn-full" onclick="doDownloadPDF()">📄 Хариулт татах (PDF)</button>
+        <button class="btn btn-full" onclick="goPage(0);resetForm()">+ Шинэ санал</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /mainForm -->
+
+<!-- ═══ ADMIN ═══ -->
+<div id="mainAdmin" class="sub-view">
+  <div id="adminLock">
+    <div class="lock-screen">
+      <div style="font-size:40px;margin-bottom:14px">🔒</div>
+      <div class="lock-card">
+        <h3>Нэвтрэх шаардлагатай</h3>
+        <p>Admin хэсэг зөвхөн зохион байгуулагчдад нээлттэй.</p>
+        <div class="field">
+          <label>Нууц үг</label>
+          <input type="password" id="adminPw" placeholder="Нууц үг оруулна уу" autocomplete="off">
+          <div class="lock-err" id="pwError">Нууц үг буруу байна</div>
+        </div>
+        <button class="btn btn-primary btn-full" id="loginBtn">🔓 Нэвтрэх</button>
+      </div>
+    </div>
+  </div>
+  <div id="adminContent" style="display:none"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div><!-- /wrap -->
+
+<script>
+(function(){
+'use strict';
+
+var ADMIN_PW = 'mfc2026';
+var STORAGE_KEY = 'mfc3_shared_v2'; // shared=true so ALL users see same data
+var _adminUnlocked = false;
+var _lastData = null;
+
+/* ── helpers ── */
+function $id(id){ return document.getElementById(id); }
+function gv(id){ var el=$id(id); return el?el.value.trim():''; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showToast(msg){ var t=$id('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); },2500); }
+
+/* ── navigation ── */
+window.goPage = function(n){
+  document.querySelectorAll('#mainForm .view').forEach(function(v){ v.classList.remove('active'); });
+  var pg = $id('pg'+n);
+  if(pg) pg.classList.add('active');
+  if(n===5) buildReview();
+  window.scrollTo(0,0);
+};
+
+window.switchMain = function(which){
+  $id('tabForm').classList.toggle('active', which==='form');
+  $id('tabAdmin').classList.toggle('active', which==='admin');
+  $id('mainForm').classList.toggle('active', which==='form');
+  $id('mainAdmin').classList.toggle('active', which==='admin');
+  if(which==='admin'){
+    if(_adminUnlocked){ renderAdmin(); }
+  }
+};
+
+/* ── admin login ── */
+function doLogin(){
+  if($id('adminPw').value === ADMIN_PW){
+    _adminUnlocked = true;
+    $id('adminLock').style.display = 'none';
+    $id('adminContent').style.display = 'block';
+    renderAdmin();
+  } else {
+    $id('pwError').style.display = 'block';
+    $id('adminPw').value = '';
+  }
+}
+$id('loginBtn').addEventListener('click', doLogin);
+$id('adminPw').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+
+/* ── toggle choices ── */
+window.toggleCh = function(el){ el.classList.toggle('sel'); };
+
+/* ── add priority row ── */
+window.addPfRow = function(){
+  var list = $id('pfList');
+  var n = list.children.length+1;
+  var div = document.createElement('div');
+  div.className = 'pf-item';
+  div.innerHTML = '<span class="pf-num">'+n+'</span><input class="pf-input" type="text" placeholder="Нэмэлт үйл ажиллагаа...">';
+  list.appendChild(div);
+};
+
+/* ── drag & drop (mouse + touch) ── */
+function initDrag(){
+  var list = $id('rankList');
+  if(!list) return;
+  var drag=null, touchClone=null;
+
+  // Mouse
+  list.querySelectorAll('.rank-item').forEach(function(item){ item.setAttribute('draggable','true'); });
+  list.addEventListener('dragstart',function(e){
+    drag=e.target.closest('.rank-item');
+    if(!drag) return;
+    setTimeout(function(){ if(drag) drag.classList.add('dragging'); },0);
+  });
+  list.addEventListener('dragend',function(){
+    if(drag) drag.classList.remove('dragging');
+    list.querySelectorAll('.rank-item').forEach(function(i){ i.classList.remove('drag-over'); });
+    drag=null; renum();
+  });
+  list.addEventListener('dragover',function(e){
+    e.preventDefault();
+    var t=e.target.closest('.rank-item');
+    if(!t||t===drag) return;
+    list.querySelectorAll('.rank-item').forEach(function(i){ i.classList.remove('drag-over'); });
+    t.classList.add('drag-over');
+    var r=t.getBoundingClientRect();
+    if(e.clientY<r.top+r.height/2) list.insertBefore(drag,t);
+    else list.insertBefore(drag,t.nextSibling);
+  });
+
+  // Touch
+  list.addEventListener('touchstart',function(e){
+    var item=e.target.closest('.rank-item'); if(!item) return;
+    drag=item;
+    var r=item.getBoundingClientRect();
+    touchClone=item.cloneNode(true);
+    touchClone.style.cssText='position:fixed;opacity:.85;pointer-events:none;z-index:9999;width:'+r.width+'px;left:'+r.left+'px;top:'+r.top+'px;background:#fff;border:2px solid #1D9E75;border-radius:8px;padding:10px 12px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+    document.body.appendChild(touchClone);
+    item.style.opacity='.3';
+  },{passive:true});
+  list.addEventListener('touchmove',function(e){
+    if(!drag||!touchClone) return;
+    e.preventDefault();
+    var t=e.touches[0];
+    touchClone.style.top=(t.clientY-25)+'px';
+    touchClone.style.left=(t.clientX-60)+'px';
+    var el=document.elementFromPoint(t.clientX,t.clientY);
+    var target=el?el.closest('.rank-item'):null;
+    list.querySelectorAll('.rank-item').forEach(function(i){ i.classList.remove('drag-over'); });
+    if(target&&target!==drag){
+      target.classList.add('drag-over');
+      var r=target.getBoundingClientRect();
+      if(t.clientY<r.top+r.height/2) list.insertBefore(drag,target);
+      else list.insertBefore(drag,target.nextSibling);
+    }
+  },{passive:false});
+  list.addEventListener('touchend',function(){
+    if(touchClone){ document.body.removeChild(touchClone); touchClone=null; }
+    if(drag){ drag.style.opacity='1'; }
+    list.querySelectorAll('.rank-item').forEach(function(i){ i.classList.remove('drag-over'); });
+    drag=null; renum();
+  },{passive:true});
+}
+function renum(){
+  document.querySelectorAll('#rankList .rank-item').forEach(function(item,i){
+    var n=item.querySelector('.rank-num'); if(n) n.textContent=i+1;
+  });
+}
+
+/* ── data collectors ── */
+function getRanking(){
+  return Array.from(document.querySelectorAll('#rankList .rank-item')).map(function(item,i){
+    var val=item.dataset.val==='__other__'?(gv('f_other')||'Бусад'):item.dataset.val;
+    return (i+1)+'. '+val;
+  });
+}
+function getPriority(){
+  return Array.from(document.querySelectorAll('#pfList .pf-input')).map(function(inp,i){
+    return (i+1)+'. '+(inp.value.trim()||'—');
+  });
+}
+function getChoices(id){
+  return Array.from(document.querySelectorAll('#'+id+' .choice-item.sel')).map(function(e){ return e.textContent.trim(); });
+}
+function getMatrix(){
+  return [['Санхүүгийн нөөц','r1'],['Технологи ба дэд бүтэц','r2'],['Хүний нөөц ба чадавх','r3'],['Зах зээлд эзлэх байр суурь','r4']].map(function(r){
+    var c=document.querySelector('input[name="'+r[1]+'"]:checked');
+    return {label:r[0],val:c?parseInt(c.value):0};
+  });
+}
+function collectData(){
+  return {
+    ts:new Date().toISOString(),
+    name:gv('f_name'), dept:gv('f_dept'),
+    ranking:getRanking(), matrix:getMatrix(),
+    conds:getChoices('condGrid'), condExtra:gv('f_cond_extra'),
+    priority:getPriority(),
+    idea:gv('f_idea'), contrib:gv('f_contrib'), risk:gv('f_risk'),
+    market:gv('f_market'), compete:gv('f_compete'),
+    invest:gv('f_invest'), roi:gv('f_roi'),
+    tech:gv('f_tech'), supply:gv('f_supply'),
+    risks:getChoices('riskGrid'), riskExtra:gv('f_risk_extra'),
+    riskmit:gv('f_riskmit'), esg:gv('f_esg'), extra:gv('f_extra')
+  };
+}
+
+/* ── review ── */
+function buildReview(){
+  var conds=getChoices('condGrid'), condExtra=gv('f_cond_extra');
+  var condDisplay=conds.map(esc).join(', ')+(condExtra?'<br><em>'+esc(condExtra)+'</em>':'');
+  var rows=[
+    ['Нэр / Албан тушаал',esc(gv('f_name'))||'—'],
+    ['Хэлтэс',esc(gv('f_dept'))||'—'],
+    ['Чиглэлийн эрэмбэ',getRanking().map(esc).join('<br>')||'—'],
+    ['Бэлэн байдал',getMatrix().map(function(m){ return esc(m.label)+': '+(m.val?m.val+'/5':'—'); }).join('<br>')],
+    ['Амжилтын нөхцөл',condDisplay||'—'],
+    ['Яаралтай үйл ажиллагаа',getPriority().map(esc).join('<br>')||'—'],
+    ['Гол санаа',esc((gv('f_idea')).substring(0,200))||'—'],
+    ['Гол үнэ цэн',esc((gv('f_contrib')).substring(0,150))||'—'],
+    ['Эрсдэл',esc((gv('f_risk')).substring(0,120))||'—'],
+    ['Нэмэлт эрсдэл',esc(gv('f_risk_extra'))||'—'],
+  ];
+  var html='<div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">Таны хариулт — нэг удаа шалгана уу</div>';
+  rows.forEach(function(r){ html+='<div class="rv-row"><div class="rv-key">'+r[0]+'</div><div class="rv-val">'+r[1]+'</div></div>'; });
+  $id('reviewBox').innerHTML=html;
+}
+
+/* ── storage: SHARED so all users see same data ── */
+async function loadAll(){
+  try{
+    var r=await window.storage.get(STORAGE_KEY, true); // shared=true
+    if(r && r.value) return JSON.parse(r.value);
+  }catch(e){}
+  return [];
+}
+async function saveAll(arr){
+  await window.storage.set(STORAGE_KEY, JSON.stringify(arr), true); // shared=true
+}
+
+/* ── submit ── */
+window.submitForm = async function(){
+  var btn=$id('submitBtn');
+  btn.disabled=true; btn.textContent='Хадгалж байна...';
+  var d=collectData();
+  _lastData=d;
+  try{
+    var all=await loadAll();
+    all.push(d);
+    await saveAll(all);
+    goPage(6);
+    showToast('Санал амжилттай хадгалагдлаа ✓');
+  }catch(e){
+    showToast('Алдаа гарлаа. Дахин оролдоно уу.');
+  }
+  btn.disabled=false; btn.innerHTML='📤 Санал илгээх';
+};
+
+/* ── reset ── */
+window.resetForm = function(){
+  document.querySelectorAll('#mainForm input[type=text],#mainForm textarea,#mainForm select').forEach(function(el){ el.value=''; });
+  document.querySelectorAll('#mainForm input[type=radio]').forEach(function(el){ el.checked=false; });
+  document.querySelectorAll('#mainForm .choice-item.sel').forEach(function(el){ el.classList.remove('sel'); });
+  var list=$id('pfList'), phs=['Жишээ: Зах зээлийн судалгаа эхлүүлэх','Жишээ: Өрсөлдөх чадварын үнэлгээ хийх','Жишээ: Пилот төсөл хэрэгжүүлэх'];
+  while(list.children.length>3) list.removeChild(list.lastChild);
+  Array.from(list.querySelectorAll('.pf-input')).forEach(function(inp,i){ inp.value=''; inp.placeholder=phs[i]||''; });
+  _lastData=null;
+};
+
+/* ── PDF ── */
+window.doDownloadPDF = function(){
+  var d=_lastData||collectData();
+  var condStr=(d.conds||[]).join(', ')+(d.condExtra?'\nНэмэлт: '+d.condExtra:'');
+  var riskStr=(d.risks||[]).join(', ')+(d.riskExtra?'\nНэмэлт: '+d.riskExtra:'');
+  var rows=[
+    ['Огноо',new Date(d.ts).toLocaleString('mn-MN')],
+    ['Нэр / Албан тушаал',d.name||'—'],['Хэлтэс',d.dept||'—'],
+    ['Чиглэлийн эрэмбэ',(d.ranking||[]).join('\n')],
+    ['Бэлэн байдал',(d.matrix||[]).map(function(m){ return m.label+': '+(m.val?m.val+'/5':'—'); }).join('\n')],
+    ['Амжилтын нөхцөл',condStr||'—'],
+    ['Яаралтай үйл ажиллагаа',(d.priority||[]).join('\n')],
+    ['Гол стратегийн санаа',d.idea||'—'],['Гол үнэ цэн',d.contrib||'—'],
+    ['Эрсдэл',d.risk||'—'],['Гол эрсдэлүүд',riskStr||'—'],
+    ['Эрсдэлийн арга хэмжээ',d.riskmit||'—'],
+    ['Зах зээл',d.market||'—'],['Өрсөлдөгч',d.compete||'—'],
+    ['Хөрөнгө оруулалт',d.invest||'—'],['ROI',d.roi||'—'],
+    ['Технологи',d.tech||'—'],['Нийлүүлэлт',d.supply||'—'],
+    ['ESG',d.esg||'—'],['Нэмэлт тайлбар',d.extra||'—'],
+  ];
+  var trs=rows.map(function(r){
+    var val=(r[1]||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    return '<tr><td style="width:33%;font-weight:700;color:#085041;padding:7px 10px;vertical-align:top;border-bottom:1px solid #e5e7eb;font-size:12px;background:#f0fdf8">'+r[0]+'</td><td style="padding:7px 10px;vertical-align:top;border-bottom:1px solid #e5e7eb;font-size:13px">'+val+'</td></tr>';
+  }).join('');
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>MFC3-'+(d.name||'Санал')+'</title>'
+    +'<style>@page{margin:14mm 12mm}body{font-family:Arial,sans-serif;color:#111}h1{font-size:15px;margin:0 0 2px;color:#fff}table{width:100%;border-collapse:collapse}tr:last-child td{border-bottom:none!important}.hdr{background:linear-gradient(135deg,#085041,#1D9E75);padding:14px 18px;border-radius:6px;margin-bottom:14px}</style>'
+    +'</head><body>'
+    +'<div class="hdr"><h1>MFC 3.0 — Стратегийн Саналын Маягт</h1><p style="font-size:12px;color:rgba(255,255,255,.9);margin:3px 0 0">Монос Хүнс ХК · Удирдлагын баг</p></div>'
+    +'<table>'+trs+'</table>'
+    +'<script>window.onload=function(){window.print();}<\/script>'
+    +'</body></html>';
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='MFC3_'+(d.name||'sanali').replace(/[^\w]/g,'_').substring(0,20)+'_'+Date.now()+'.html';
+  a.style.display='none'; document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },500);
+  showToast('HTML файл татагдлаа — нээгээд Print → PDF хадгалах');
+};
+
+/* ── admin render ── */
+async function renderAdmin(){
+  var el=$id('adminContent');
+  el.innerHTML='<div class="loading">⏳ Ачааллаж байна...</div>';
+  var all=await loadAll();
+  if(!all.length){
+    el.innerHTML='<div class="loading">📭 Одоогоор ирүүлсэн санал байхгүй байна</div>';
+    return;
+  }
+  var tc=all.length;
+  var depts={};all.forEach(function(s){ if(s.dept) depts[s.dept]=(depts[s.dept]||0)+1; });
+  var topDept=Object.keys(depts).sort(function(a,b){ return depts[b]-depts[a]; })[0]||'—';
+  var dNames=['Органик бүтээгдэхүүн','Сахаргүй хүнс','Ургамлын гаралтай','Функциональ хүнс','Тусгай зорилтот хүнс'];
+  var dS={};dNames.forEach(function(d){ dS[d]=0; });
+  all.forEach(function(s){ if(!s.ranking)return; var n=s.ranking.length; s.ranking.forEach(function(r,i){ var nm=r.replace(/^\d+\.\s*/,''); if(dS[nm]!==undefined) dS[nm]+=(n-i); }); });
+  var sorted=Object.keys(dS).sort(function(a,b){ return dS[b]-dS[a]; });
+  var maxS=dS[sorted[0]]||1;
+  var mL=['Санхүүгийн нөөц','Технологи ба дэд бүтэц','Хүний нөөц ба чадавх','Зах зээлд эзлэх байр суурь'];
+  var mA={};mL.forEach(function(l){ mA[l]={sum:0,cnt:0}; });
+  all.forEach(function(s){ if(!s.matrix)return; s.matrix.forEach(function(m){ if(mA[m.label]&&m.val){ mA[m.label].sum+=m.val; mA[m.label].cnt++; } }); });
+  var cC={};all.forEach(function(s){ (s.conds||[]).forEach(function(c){ cC[c]=(cC[c]||0)+1; }); });
+  var sConds=Object.keys(cC).sort(function(a,b){ return cC[b]-cC[a]; });
+  var rC={};all.forEach(function(s){ (s.risks||[]).forEach(function(r){ rC[r]=(rC[r]||0)+1; }); });
+  var sRisks=Object.keys(rC).sort(function(a,b){ return rC[b]-rC[a]; });
+
+  var h='<div class="stat-grid">'
+    +'<div class="stat-card"><div class="stat-num">'+tc+'</div><div class="stat-lbl">Нийт санал</div></div>'
+    +'<div class="stat-card"><div class="stat-num">'+(17-tc)+'</div><div class="stat-lbl">Үлдсэн гишүүн</div></div>'
+    +'<div class="stat-card"><div class="stat-num">'+Math.round(tc/17*100)+'%</div><div class="stat-lbl">Оролцооны хувь</div></div>'
+    +'<div class="stat-card"><div class="stat-num" style="font-size:16px">'+esc(topDept)+'</div><div class="stat-lbl">Идэвхтэй хэлтэс</div></div>'
+    +'</div>';
+  h+='<div class="data-card"><div class="data-card-title">📊 Стратегийн чиглэлийн нэгтгэсэн эрэмбэ</div>';
+  sorted.forEach(function(nm,i){ var p=Math.round(dS[nm]/maxS*100); h+='<div class="bar-row"><div class="bar-label"><span>'+(i+1)+'. '+esc(nm)+'</span><span class="bar-score">'+dS[nm]+' оноо</span></div><div class="bar-track"><div class="bar-fill-g" style="width:'+p+'%"></div></div></div>'; });
+  h+='</div>';
+  h+='<div class="data-card"><div class="data-card-title">🔵 Бэлэн байдлын үнэлгээний дундаж</div>';
+  mL.forEach(function(l){ var avg=mA[l].cnt?mA[l].sum/mA[l].cnt:0; var p=Math.round(avg/5*100); h+='<div class="bar-row"><div class="bar-label"><span>'+esc(l)+'</span><span class="bar-score">'+avg.toFixed(1)+'/5</span></div><div class="bar-track"><div class="bar-fill-b" style="width:'+p+'%"></div></div></div>'; });
+  h+='</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  h+='<div class="data-card" style="margin-bottom:0"><div class="data-card-title">✅ Амжилтын нөхцөл</div>';
+  if(sConds.length) sConds.forEach(function(c){ h+='<div class="count-row"><span>'+esc(c)+'</span><span class="badge-g">'+cC[c]+'</span></div>'; });
+  else h+='<div style="font-size:12px;color:#6b7280">—</div>';
+  h+='</div><div class="data-card" style="margin-bottom:0"><div class="data-card-title">⚠️ Эрсдэлүүд</div>';
+  if(sRisks.length) sRisks.forEach(function(r){ h+='<div class="count-row"><span>'+esc(r)+'</span><span class="badge-r">'+rC[r]+'</span></div>'; });
+  else h+='<div style="font-size:12px;color:#6b7280">—</div>';
+  h+='</div></div>';
+  h+='<div class="data-card"><div class="data-card-title">👥 Ирүүлсэн саналуудын жагсаалт</div>';
+  all.forEach(function(s,i){
+    h+='<div class="sub-row"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. '+esc(s.name||'—')+'</span><span style="font-size:11px;background:#f9fafb;padding:2px 8px;border-radius:10px;color:#6b7280">'+esc(s.dept||'—')+'</span></div>';
+    if(s.idea) h+='<div style="font-size:12px;color:#6b7280;line-height:1.5">'+esc((s.idea||'').substring(0,100))+((s.idea||'').length>100?'…':'')+'</div>';
+    h+='<div style="font-size:11px;color:#9ca3af;margin-top:2px">'+new Date(s.ts).toLocaleString('mn-MN')+'</div></div>';
+  });
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    +'<button class="btn btn-blue" onclick="exportCSV()">⬇️ CSV татах</button>'
+    +'<button class="btn btn-primary" onclick="sendPrompt(\'MFC 3.0 удирдлагын багийн саналуудын дүн шинжилгээ хийж Retreat 2026 HY танилцуулгад бэлтгэх зөвлөмж гарга\')">🤖 Стратегийн шинжилгээ</button>'
+    +'<button class="btn btn-danger" onclick="clearAll()">🗑️ Устгах</button>'
+    +'</div>';
+  el.innerHTML=h;
+}
+
+window.exportCSV = async function(){
+  var all=await loadAll();
+  var hd=['Огноо','Нэр','Хэлтэс','Эрэмбэ 1','Эрэмбэ 2','Эрэмбэ 3','Санхүүгийн нөөц','Технологи','Хүний нөөц','Зах зээл','Амжилтын нөхцөл','Нэмэлт нөхцөл','Гол санаа','Гол үнэ цэн','Эрсдэл','Нэмэлт эрсдэл'];
+  var rows=all.map(function(s){
+    var r=s.ranking||[],m=s.matrix||[];
+    var mg=function(l){ var f=m.filter(function(x){ return x.label===l; })[0]; return f?f.val:''; };
+    return [new Date(s.ts).toLocaleString('mn-MN'),s.name,s.dept,r[0]?r[0].replace(/^\d+\.\s*/,''):'',r[1]?r[1].replace(/^\d+\.\s*/,''):'',r[2]?r[2].replace(/^\d+\.\s*/,''):'',mg('Санхүүгийн нөөц'),mg('Технологи ба дэд бүтэц'),mg('Хүний нөөц ба чадавх'),mg('Зах зээлд эзлэх байр суурь'),(s.conds||[]).join('; '),s.condExtra||'',s.idea,s.contrib,s.risk,s.riskExtra||''].map(function(v){ return '"'+(v||'').toString().replace(/"/g,'""')+'"'; });
+  });
+  var csv='\uFEFF'+[hd.map(function(h){ return '"'+h+'"'; })].concat(rows).map(function(r){ return r.join(','); }).join('\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='MFC3_'+Date.now()+'.csv'; a.style.display='none';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },500);
+  showToast('CSV файл татагдлаа');
+};
+
+window.clearAll = async function(){
+  if(!confirm('Бүх саналуудыг устгах уу?')) return;
+  try{ await window.storage.delete(STORAGE_KEY, true); }catch(e){}
+  renderAdmin();
+  showToast('Бүх санал устгагдлаа');
+};
+
+/* ── init ── */
+initDrag();
+
+})();
+</script>
+</body>
+</html>
