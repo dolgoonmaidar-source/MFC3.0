@@ -116,18 +116,6 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 <body>
 <div class="wrap">
 
-<!-- ══ CONFIG NOTICE (hidden after setup) ══ -->
-<div class="cfg-box" id="cfgBox">
-  <strong>⚙️ Нэг удаагийн тохиргоо шаардлагатай</strong><br>
-  Дата хадгалахын тулд <strong>JSONBin.io</strong>-д үнэгүй бүртгэл үүсгэж API түлхүүр оруулна уу:<br><br>
-  1. <a href="https://jsonbin.io" target="_blank">jsonbin.io</a>-д бүртгүүлэх → <strong>API Keys</strong> → <strong>Secret Key</strong> хуулах<br>
-  2. Доор оруулах:<br><br>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <input type="text" id="cfgKey" placeholder="$2b$10$xxxxxx... (Secret Key)" style="flex:1;min-width:200px;border:1.5px solid #F9A825;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit">
-    <button onclick="saveConfig()" style="background:#E65100;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">💾 Хадгалах</button>
-  </div>
-  <div style="margin-top:8px;font-size:12px;color:#6b7280">Тохиргоо хийгдсэний дараа энэ хэсэг нуугдана. Та нэг л удаа хийнэ.</div>
-</div>
 
 <!-- NAV -->
 <div class="nav-bar">
@@ -347,43 +335,24 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 'use strict';
 
 /* ═══════════════════════════════════════════════
-   STORAGE — JSONBin.io
-   Free tier: 10k reads/month, 100 bins
-   One bin = our "database" (array of submissions)
+   STORAGE — JSONBin.io (hardcoded, no setup needed)
    ═══════════════════════════════════════════════ */
-var CFG_KEY  = 'mfc3_cfg';   // localStorage key for API key + bin ID
+var API_KEY  = '$2a$10$m7IQZwknRzI73p.UMNTEb.TAeaLKH9SM36LMiDtGbYfnDrLuCUf4y';
+var BIN_ID   = '';   // auto-created on first load
 var ADMIN_PW = 'mfc2026';
 var BIN_NAME = 'MFC3-Submissions';
-var _cfg = {};
 var _adminUnlocked = false;
 var _lastData = null;
 
-function loadCfg(){
-  try{ _cfg = JSON.parse(localStorage.getItem(CFG_KEY)||'{}'); }catch(e){ _cfg={}; }
-}
-function saveCfg(){ localStorage.setItem(CFG_KEY, JSON.stringify(_cfg)); }
-
-window.saveConfig = function(){
-  var key = document.getElementById('cfgKey').value.trim();
-  if(!key){ alert('API түлхүүр оруулна уу'); return; }
-  _cfg.apiKey = key;
-  saveCfg();
-  initBin().then(function(){
-    document.getElementById('cfgBox').style.display='none';
-    showToast('✅ Тохиргоо хадгалагдлаа');
-  }).catch(function(e){
-    alert('Алдаа: '+e.message+'\nAPI түлхүүр зөв эсэхийг шалгана уу.');
-  });
-};
-
-/* Create bin on first run, store bin ID */
+/* Create bin on very first load, cache ID in localStorage */
 async function initBin(){
-  if(_cfg.binId) return; // already set up
+  var cached = localStorage.getItem('mfc3_binId');
+  if(cached){ BIN_ID = cached; return; }
   var res = await fetch('https://api.jsonbin.io/v3/b',{
     method:'POST',
     headers:{
       'Content-Type':'application/json',
-      'X-Master-Key': _cfg.apiKey,
+      'X-Master-Key': API_KEY,
       'X-Bin-Name': BIN_NAME,
       'X-Bin-Private': 'false'
     },
@@ -391,14 +360,14 @@ async function initBin(){
   });
   if(!res.ok) throw new Error('JSONBin үүсгэж чадсангүй: '+res.status);
   var j = await res.json();
-  _cfg.binId = j.metadata.id;
-  saveCfg();
+  BIN_ID = j.metadata.id;
+  localStorage.setItem('mfc3_binId', BIN_ID);
 }
 
 async function loadAll(){
-  if(!_cfg.apiKey || !_cfg.binId) return [];
-  var res = await fetch('https://api.jsonbin.io/v3/b/'+_cfg.binId+'/latest',{
-    headers:{'X-Master-Key': _cfg.apiKey}
+  await initBin();
+  var res = await fetch('https://api.jsonbin.io/v3/b/'+BIN_ID+'/latest',{
+    headers:{'X-Master-Key': API_KEY}
   });
   if(!res.ok) throw new Error('Дата уншиж чадсангүй: '+res.status);
   var j = await res.json();
@@ -406,12 +375,12 @@ async function loadAll(){
 }
 
 async function saveAll(arr){
-  if(!_cfg.apiKey || !_cfg.binId) throw new Error('Тохиргоо хийгдээгүй байна');
-  var res = await fetch('https://api.jsonbin.io/v3/b/'+_cfg.binId,{
+  await initBin();
+  var res = await fetch('https://api.jsonbin.io/v3/b/'+BIN_ID,{
     method:'PUT',
     headers:{
       'Content-Type':'application/json',
-      'X-Master-Key': _cfg.apiKey
+      'X-Master-Key': API_KEY
     },
     body: JSON.stringify(arr)
   });
@@ -535,11 +504,6 @@ function buildReview(){
 
 /* ── submit ── */
 window.submitForm = async function(){
-  if(!_cfg.apiKey || !_cfg.binId){
-    showToast('⚠️ Эхлээд JSONBin тохиргоо хийнэ үү',3500);
-    window.scrollTo(0,0);
-    return;
-  }
   var btn=$id('submitBtn');
   btn.disabled=true; btn.textContent='⏳ Хадгалж байна...';
   try{
@@ -646,8 +610,7 @@ window.clearAll = async function(){
 };
 
 /* ── init ── */
-loadCfg();
-if(_cfg.apiKey && _cfg.binId) document.getElementById('cfgBox').style.display='none';
+initBin().catch(function(e){ console.warn('JSONBin init:', e.message); });
 initDrag();
 
 })();
