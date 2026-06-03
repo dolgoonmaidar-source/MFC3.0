@@ -338,44 +338,27 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
    STORAGE — JSONBin.io (hardcoded, no setup needed)
    ═══════════════════════════════════════════════ */
 var API_KEY  = '$2a$10$m7IQZwknRzI73p.UMNTEb.TAeaLKH9SM36LMiDtGbYfnDrLuCUf4y';
-var BIN_ID   = '';   // auto-created on first load
+var BIN_ID   = '6a1faa03f5f4af5e29b073c6';
 var ADMIN_PW = 'mfc2026';
-var BIN_NAME = 'MFC3-Submissions';
 var _adminUnlocked = false;
 var _lastData = null;
 
-/* Create bin on very first load, cache ID in localStorage */
-async function initBin(){
-  var cached = localStorage.getItem('mfc3_binId');
-  if(cached){ BIN_ID = cached; return; }
-  var res = await fetch('https://api.jsonbin.io/v3/b',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'X-Master-Key': API_KEY,
-      'X-Bin-Name': BIN_NAME,
-      'X-Bin-Private': 'false'
-    },
-    body: JSON.stringify([])
-  });
-  if(!res.ok) throw new Error('JSONBin үүсгэж чадсангүй: '+res.status);
-  var j = await res.json();
-  BIN_ID = j.metadata.id;
-  localStorage.setItem('mfc3_binId', BIN_ID);
-}
+async function initBin(){ /* already hardcoded, nothing to do */ }
 
 async function loadAll(){
-  await initBin();
   var res = await fetch('https://api.jsonbin.io/v3/b/'+BIN_ID+'/latest',{
     headers:{'X-Master-Key': API_KEY}
   });
   if(!res.ok) throw new Error('Дата уншиж чадсангүй: '+res.status);
   var j = await res.json();
-  return Array.isArray(j.record) ? j.record : [];
+  var rec = j.record;
+  if(Array.isArray(rec)) return rec;
+  // strip init placeholder
+  if(Array.isArray(rec) && rec.length===1 && rec[0].init) return [];
+  return [];
 }
 
 async function saveAll(arr){
-  await initBin();
   var res = await fetch('https://api.jsonbin.io/v3/b/'+BIN_ID,{
     method:'PUT',
     headers:{
@@ -610,7 +593,6 @@ window.clearAll = async function(){
 };
 
 /* ── init ── */
-initBin().catch(function(e){ console.warn('JSONBin init:', e.message); });
 initDrag();
 
 })();
