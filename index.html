@@ -337,40 +337,35 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 /* ═══════════════════════════════════════════════
    STORAGE — JSONBin.io (hardcoded, no setup needed)
    ═══════════════════════════════════════════════ */
-var API_KEY  = '$2a$10$m7IQZwknRzI73p.UMNTEb.TAeaLKH9SM36LMiDtGbYfnDrLuCUf4y';
-var BIN_ID   = '6a1faa03f5f4af5e29b073c6';
+var GAS_URL  = 'https://script.google.com/macros/s/AKfycbyU_AoGIG5v4ePc9Na1dpxgtlBkbW9psa49-thDOR6d_0aLhQLgy4We0FfxWgF3NE1B/exec';
 var ADMIN_PW = 'mfc2026';
 var _adminUnlocked = false;
 var _lastData = null;
 
-async function initBin(){ /* already hardcoded, nothing to do */ }
-
 async function loadAll(){
-  var res = await fetch('https://api.jsonbin.io/v3/b/'+BIN_ID+'/latest',{
-    headers:{
-      'X-Master-Key': API_KEY,
-      'X-Access-Key': API_KEY
-    }
-  });
-  if(!res.ok) throw new Error('Дата уншиж чадсангүй: '+res.status);
-  var j = await res.json();
-  var rec = j.record;
-  if(!Array.isArray(rec)) return [];
-  // filter out init placeholder
-  return rec.filter(function(r){ return !r.init; });
+  var url = GAS_URL + '?action=load&t=' + Date.now();
+  var res = await fetch(url);
+  if(!res.ok) throw new Error('Дата уншиж чадсангүй: ' + res.status);
+  var data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
-async function saveAll(arr){
-  var res = await fetch('https://api.jsonbin.io/v3/b/'+BIN_ID,{
-    method:'PUT',
-    headers:{
-      'Content-Type':'application/json',
-      'X-Master-Key': API_KEY,
-      'X-Access-Key': API_KEY
-    },
-    body: JSON.stringify(arr)
+async function saveRecord(record){
+  var res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'save', record: record })
   });
-  if(!res.ok) throw new Error('Хадгалж чадсангүй: '+res.status);
+  if(!res.ok) throw new Error('Хадгалж чадсангүй: ' + res.status);
+}
+
+async function clearAll_remote(){
+  var res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'clear' })
+  });
+  if(!res.ok) throw new Error('Устгаж чадсангүй: ' + res.status);
 }
 
 /* ── helpers ── */
@@ -513,13 +508,11 @@ window.submitForm = async function(){
   try{
     var d=collectData();
     _lastData=d;
-    var all=await loadAll();
-    all.push(d);
-    await saveAll(all);
+    await saveRecord(d);
     goPage(6);
     showToast('✅ Санал амжилттай хадгалагдлаа');
   }catch(e){
-    showToast('❌ Алдаа: '+e.message,4000);
+    showToast('❌ Алдаа: '+e.message, 4000);
   }
   btn.disabled=false; btn.innerHTML='📤 Санал илгээх';
 };
@@ -595,7 +588,8 @@ async function renderAdmin(){
 }
 
 window.exportCSV = async function(){
-  var all=await loadAll();
+  var all;
+  try{ all=await loadAll(); }catch(e){ showToast('❌ '+e.message,3000); return; }
   var hd=['Огноо','Нэр','Хэлтэс','Эрэмбэ 1','Эрэмбэ 2','Эрэмбэ 3','Санхүүгийн нөөц','Технологи','Хүний нөөц','Зах зээл','Амжилтын нөхцөл','Нэмэлт нөхцөл','Гол санаа','Гол үнэ цэн','Эрсдэл','Нэмэлт эрсдэл'];
   var rows=all.map(function(s){ var r=s.ranking||[],m=s.matrix||[]; var mg=function(l){ var f=m.filter(function(x){ return x.label===l; })[0]; return f?f.val:''; }; return [new Date(s.ts).toLocaleString('mn-MN'),s.name,s.dept,r[0]?r[0].replace(/^\d+\.\s*/,''):'',r[1]?r[1].replace(/^\d+\.\s*/,''):'',r[2]?r[2].replace(/^\d+\.\s*/,''):'',mg('Санхүүгийн нөөц'),mg('Технологи ба дэд бүтэц'),mg('Хүний нөөц ба чадавх'),mg('Зах зээлд эзлэх байр суурь'),(s.conds||[]).join('; '),s.condExtra||'',s.idea,s.contrib,s.risk,s.riskExtra||''].map(function(v){ return '"'+(v||'').toString().replace(/"/g,'""')+'"'; }); });
   var csv='\uFEFF'+[hd.map(function(h){ return '"'+h+'"'; })].concat(rows).map(function(r){ return r.join(','); }).join('\n');
@@ -608,9 +602,13 @@ window.exportCSV = async function(){
 
 window.clearAll = async function(){
   if(!confirm('Бүх саналуудыг устгах уу?')) return;
-  await saveAll([]);
-  renderAdmin();
-  showToast('Бүх санал устгагдлаа');
+  try{
+    await clearAll_remote();
+    renderAdmin();
+    showToast('Бүх санал устгагдлаа');
+  }catch(e){
+    showToast('❌ Алдаа: '+e.message, 4000);
+  }
 };
 
 /* ── init ── */
