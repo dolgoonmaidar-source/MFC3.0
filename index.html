@@ -337,34 +337,33 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 /* ═══════════════════════════════════════════════
    STORAGE — JSONBin.io (hardcoded, no setup needed)
    ═══════════════════════════════════════════════ */
-var GAS_URL  = 'https://script.google.com/macros/s/AKfycbyU_AoGIG5v4ePc9Na1dpxgtlBkbW9psa49-thDOR6d_0aLhQLgy4We0FfxWgF3NE1B/exec';
+var GAS_URL  = 'https://script.google.com/macros/s/AKfycbzgb1wyIxBBKA2RWY2_qGReQwr05FDyeL07OijqHdNn2Gb_XshUWaYnNs1kgRKYTffM/exec';
 var ADMIN_PW = 'mfc2026';
 var _adminUnlocked = false;
 var _lastData = null;
 
 async function loadAll(){
-  var url = GAS_URL + '?action=load&t=' + Date.now();
-  var res = await fetch(url);
+  var res = await fetch(GAS_URL + '?action=load', { method: 'GET' });
   if(!res.ok) throw new Error('Дата уншиж чадсангүй: ' + res.status);
-  var data = await res.json();
-  return Array.isArray(data) ? data : [];
+  var text = await res.text();
+  try{
+    var data = JSON.parse(text);
+    return Array.isArray(data) ? data : [];
+  }catch(e){ return []; }
 }
 
 async function saveRecord(record){
-  var res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'save', record: record })
-  });
+  var formData = new FormData();
+  formData.append('action', 'save');
+  formData.append('record', JSON.stringify(record));
+  var res = await fetch(GAS_URL, { method: 'POST', body: formData });
   if(!res.ok) throw new Error('Хадгалж чадсангүй: ' + res.status);
 }
 
 async function clearAll_remote(){
-  var res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'clear' })
-  });
+  var formData = new FormData();
+  formData.append('action', 'clear');
+  var res = await fetch(GAS_URL, { method: 'POST', body: formData });
   if(!res.ok) throw new Error('Устгаж чадсангүй: ' + res.status);
 }
 
