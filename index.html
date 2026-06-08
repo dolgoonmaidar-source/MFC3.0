@@ -609,14 +609,45 @@ async function renderAdmin(){
 window.exportCSV = async function(){
   var all;
   try{ all=await loadAll(); }catch(e){ showToast('❌ '+e.message,3000); return; }
-  var hd=['Огноо','Нэр','Хэлтэс','Эрэмбэ 1','Эрэмбэ 2','Эрэмбэ 3','Санхүүгийн нөөц','Технологи','Хүний нөөц','Зах зээл','Амжилтын нөхцөл','Нэмэлт нөхцөл','Гол санаа','Гол үнэ цэн','Эрсдэл','Нэмэлт эрсдэл'];
-  var rows=all.map(function(s){ var r=s.ranking||[],m=s.matrix||[]; var mg=function(l){ var f=m.filter(function(x){ return x.label===l; })[0]; return f?f.val:''; }; return [new Date(s.ts).toLocaleString('mn-MN'),s.name,s.dept,r[0]?r[0].replace(/^\d+\.\s*/,''):'',r[1]?r[1].replace(/^\d+\.\s*/,''):'',r[2]?r[2].replace(/^\d+\.\s*/,''):'',mg('Санхүүгийн нөөц'),mg('Технологи ба дэд бүтэц'),mg('Хүний нөөц ба чадавх'),mg('Зах зээлд эзлэх байр суурь'),(s.conds||[]).join('; '),s.condExtra||'',s.idea,s.contrib,s.risk,s.riskExtra||''].map(function(v){ return '"'+(v||'').toString().replace(/"/g,'""')+'"'; }); });
+  var hd=[
+    'Огноо','Нэр','Хэлтэс','Төслийн нэр',
+    'Эрэмбэ 1','Эрэмбэ 2','Эрэмбэ 3','Эрэмбэ 4','Эрэмбэ 5','Эрэмбэ 6',
+    'Санхүүгийн нөөц','Технологи ба дэд бүтэц','Хүний нөөц ба чадавх','Зах зээлд эзлэх байр суурь',
+    'Амжилтын нөхцөл','Нэмэлт нөхцөл',
+    'Тэргүүлэх чиглэл 1','Тэргүүлэх чиглэл 2','Тэргүүлэх чиглэл 3','Тэргүүлэх чиглэл 4',
+    'Гол санаа','Гол үнэ цэн / Хувь нэмэр','Эрсдэл',
+    'Гол эрсдэлүүд (сонгосон)','Нэмэлт эрсдэл','Эрсдэл бууруулах арга хэмжээ',
+    'Зах зээлийн хэмжээ','Өрсөлдөгчид / Давуу тал',
+    'Хөрөнгө оруулалт','ROI / Хугацаа',
+    'Технологийн бэлэн байдал','Нийлүүлэлт / Хангамж',
+    'ESG','Нэмэлт мэдээлэл'
+  ];
+  var rows=all.map(function(s){
+    var r=s.ranking||[], m=s.matrix||[], p=s.priority||[];
+    var mg=function(l){ var f=m.filter(function(x){ return x.label===l; })[0]; return f?f.val:''; };
+    var rn=function(i){ return r[i]?r[i].replace(/^\d+\.\s*/,''):''; };
+    var pn=function(i){ return p[i]?p[i].replace(/^\d+\.\s*/,''):''; };
+    return [
+      new Date(s.ts).toLocaleString('mn-MN'),
+      s.name, s.dept, s.project||'',
+      rn(0),rn(1),rn(2),rn(3),rn(4),rn(5),
+      mg('Санхүүгийн нөөц'),mg('Технологи ба дэд бүтэц'),mg('Хүний нөөц ба чадавх'),mg('Зах зээлд эзлэх байр суурь'),
+      (s.conds||[]).join('; '), s.condExtra||'',
+      pn(0),pn(1),pn(2),pn(3),
+      s.idea||'', s.contrib||'', s.risk||'',
+      (s.risks||[]).join('; '), s.riskExtra||'', s.riskmit||'',
+      s.market||'', s.compete||'',
+      s.invest||'', s.roi||'',
+      s.tech||'', s.supply||'',
+      s.esg||'', s.extra||''
+    ].map(function(v){ return '"'+(v||'').toString().replace(/"/g,'""')+'"'; });
+  });
   var csv='\uFEFF'+[hd.map(function(h){ return '"'+h+'"'; })].concat(rows).map(function(r){ return r.join(','); }).join('\n');
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url; a.download='MFC3_'+Date.now()+'.csv'; a.style.display='none';
   document.body.appendChild(a); a.click();
   setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },500);
-  showToast('CSV файл татагдлаа');
+  showToast('CSV файл татагдлаа ('+all.length+' санал, 34 багана)');
 };
 
 window.clearAll = async function(){
