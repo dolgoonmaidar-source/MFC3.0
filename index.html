@@ -111,6 +111,31 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 .cfg-box{background:#FFF8E1;border:1.5px solid #F9A825;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.6}
 .cfg-box strong{color:#E65100}
 .cfg-box code{background:#fff;border:1px solid #ddd;border-radius:4px;padding:1px 6px;font-size:12px;word-break:break-all}
+/* ── admin modals ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;overflow-y:auto;padding:16px}
+.modal-overlay.open{display:flex;align-items:flex-start;justify-content:center}
+.modal-box{background:#fff;border-radius:14px;width:100%;max-width:620px;margin:auto;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+.modal-header{background:linear-gradient(135deg,#085041,#1D9E75);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:15px;font-weight:700;color:#fff;margin:0}
+.modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-body{padding:16px;max-height:75vh;overflow-y:auto}
+.detail-row{border-bottom:1px solid #e5e7eb;padding:9px 0}
+.detail-row:last-child{border-bottom:none}
+.detail-key{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.detail-val{font-size:13px;color:#111827;line-height:1.6;white-space:pre-wrap}
+/* question view */
+.q-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.q-btn{border:1.5px solid #d1d5db;border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:#374151;font-family:inherit;transition:all .15s}
+.q-btn.active{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.q-answer-row{background:#f9fafb;border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid #e5e7eb}
+.q-answer-name{font-size:12px;font-weight:700;color:#085041;margin-bottom:4px}
+.q-answer-text{font-size:13px;color:#111827;line-height:1.6;white-space:pre-wrap}
+/* tappable sub-row */
+.sub-row-tap{cursor:pointer;transition:background .15s;border-radius:8px;margin:-4px;padding:4px}
+.sub-row-tap:hover{background:#f0fdf8}
+.sub-row-actions{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.btn-del-one{background:none;border:1px solid #fca5a5;color:#D85A30;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-del-one:hover{background:#FAECE7}
 </style>
 </head>
 <body>
@@ -329,6 +354,31 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ── Detail modal ── -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="detailTitle">Дэлгэрэнгүй</h3>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- ── Question view modal ── -->
+<div class="modal-overlay" id="questionModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📋 Асуулт тус бүрийн хариулт</h3>
+      <button class="modal-close" onclick="closeModal('questionModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="q-picker" id="qPicker"></div>
+      <div id="qAnswers"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <script>
@@ -597,12 +647,18 @@ async function renderAdmin(){
   else h+='<div style="font-size:12px;color:#6b7280">—</div>';
   h+='</div></div><div class="data-card"><div class="data-card-title">👥 Ирүүлсэн саналуудын жагсаалт</div>';
   all.forEach(function(s,i){
-    h+='<div class="sub-row"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. '+esc(s.name||'—')+'</span><span style="font-size:11px;background:#f9fafb;padding:2px 8px;border-radius:10px;color:#6b7280">'+esc(s.dept||'—')+'</span></div>';
+    var sid=encodeURIComponent(s.ts||String(i));
+    h+='<div class="sub-row">';
+    h+='<div class="sub-row-tap" onclick="showDetail(\''+sid+'\')">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. '+esc(s.name||'—')+'</span><span style="font-size:11px;background:#f9fafb;padding:2px 8px;border-radius:10px;color:#6b7280">'+esc(s.dept||'—')+'</span></div>';
     if(s.project) h+='<div style="font-size:12px;color:#1D9E75;font-weight:600;margin-bottom:2px">📋 '+esc(s.project)+'</div>';
     if(s.idea) h+='<div style="font-size:12px;color:#6b7280;line-height:1.5">'+esc((s.idea||'').substring(0,100))+((s.idea||'').length>100?'…':'')+'</div>';
-    h+='<div style="font-size:11px;color:#9ca3af;margin-top:2px">'+new Date(s.ts).toLocaleString('mn-MN')+'</div></div>';
+    h+='<div style="font-size:11px;color:#9ca3af;margin-top:2px">'+new Date(s.ts).toLocaleString('mn-MN')+' &nbsp;👆 Дэлгэрэнгүй харах</div>';
+    h+='</div>';
+    h+='<div class="sub-row-actions"><span></span><button class="btn-del-one" onclick="deleteOne(\''+sid+'\',event)">🗑 Устгах</button></div>';
+    h+='</div>';
   });
-  h+='</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><button class="btn btn-blue" onclick="exportCSV()">⬇️ CSV татах</button><button class="btn btn-danger" onclick="clearAll()">🗑️ Устгах</button></div>';
+  h+='</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><button class="btn btn-blue" onclick="exportCSV()">⬇️ CSV татах</button><button class="btn btn-primary" onclick="openQuestionView()">📋 Асуулт харах</button><button class="btn btn-danger" onclick="clearAll()">🗑️ Бүгдийг устгах</button></div>';
   el.innerHTML=h;
 }
 
@@ -658,6 +714,110 @@ window.clearAll = async function(){
     showToast('Бүх санал устгагдлаа');
   }catch(e){
     showToast('❌ Алдаа: '+e.message, 4000);
+  }
+};
+
+/* ── admin: detail modal ── */
+var _cachedAll = null;
+window.closeModal = function(id){ $id(id).classList.remove('open'); };
+window.showDetail = async function(tsEnc){
+  var ts=decodeURIComponent(tsEnc);
+  var all; try{ all=await loadAll(); }catch(e){ showToast('❌ '+e.message,3000); return; }
+  _cachedAll=all;
+  var s=all.filter(function(x){ return x.ts===ts; })[0]; if(!s) return;
+  $id('detailTitle').textContent=(s.name||'—')+' · '+(s.dept||'—');
+  var condStr=(s.conds||[]).join(', ')+(s.condExtra?'\n+Нэмэлт: '+s.condExtra:'');
+  var riskStr=(s.risks||[]).join(', ')+(s.riskExtra?'\n+Нэмэлт: '+s.riskExtra:'');
+  var fields=[
+    ['Огноо',new Date(s.ts).toLocaleString('mn-MN')],
+    ['Нэр / Албан тушаал',s.name],
+    ['Хэлтэс',s.dept],
+    ['Санал болгож буй төслийн нэр',s.project],
+    ['Чиглэлийн эрэмбэ',(s.ranking||[]).join('\n')],
+    ['Бэлэн байдал',(s.matrix||[]).map(function(m){ return m.label+': '+(m.val?m.val+'/5':'—'); }).join('\n')],
+    ['Амжилтын нөхцөл',condStr],
+    ['Яаралтай үйл ажиллагаа',(s.priority||[]).join('\n')],
+    ['Гол стратегийн санаа',s.idea],
+    ['Гол үнэ цэн / Хувь нэмэр',s.contrib],
+    ['Эрсдэл',s.risk],
+    ['Гол эрсдэлүүд',riskStr],
+    ['Эрсдэл бууруулах арга хэмжээ',s.riskmit],
+    ['Зах зээлийн хэмжээ',s.market],
+    ['Өрсөлдөгчид / Давуу тал',s.compete],
+    ['Хөрөнгө оруулалт',s.invest],
+    ['ROI / Хугацаа',s.roi],
+    ['Технологийн бэлэн байдал',s.tech],
+    ['Нийлүүлэлт / Хангамж',s.supply],
+    ['ESG',s.esg],
+    ['Нэмэлт мэдээлэл',s.extra],
+  ];
+  var html='';
+  fields.forEach(function(f){ if(!f[1]) return; html+='<div class="detail-row"><div class="detail-key">'+esc(f[0])+'</div><div class="detail-val">'+esc(f[1])+'</div></div>'; });
+  $id('detailBody').innerHTML=html;
+  $id('detailModal').classList.add('open');
+};
+
+/* ── admin: question view modal ── */
+var _qDefs=[
+  {key:'ranking',   label:'Чиглэлийн эрэмбэ',         fn:function(s){ return (s.ranking||[]).join(', '); }},
+  {key:'matrix',    label:'Бэлэн байдлын үнэлгээ',      fn:function(s){ return (s.matrix||[]).map(function(m){ return m.label+': '+(m.val||'—')+'/5'; }).join(' | '); }},
+  {key:'conds',     label:'Амжилтын нөхцөл',            fn:function(s){ return [(s.conds||[]).join(', '),s.condExtra].filter(Boolean).join(' / '); }},
+  {key:'priority',  label:'Яаралтай үйл ажиллагаа',    fn:function(s){ return (s.priority||[]).join('\n'); }},
+  {key:'idea',      label:'Гол стратегийн санаа',        fn:function(s){ return s.idea||''; }},
+  {key:'contrib',   label:'Гол үнэ цэн / Хувь нэмэр',  fn:function(s){ return s.contrib||''; }},
+  {key:'risk',      label:'Хамгийн том эрсдэл',          fn:function(s){ return s.risk||''; }},
+  {key:'risks',     label:'Эрсдэлийн сонголт',           fn:function(s){ return [(s.risks||[]).join(', '),s.riskExtra].filter(Boolean).join(' / '); }},
+  {key:'riskmit',   label:'Эрсдэл бууруулах арга хэмжээ',fn:function(s){ return s.riskmit||''; }},
+  {key:'market',    label:'Зах зээлийн хэмжээ',          fn:function(s){ return s.market||''; }},
+  {key:'compete',   label:'Өрсөлдөгчид / Давуу тал',    fn:function(s){ return s.compete||''; }},
+  {key:'invest',    label:'Хөрөнгө оруулалт',            fn:function(s){ return s.invest||''; }},
+  {key:'roi',       label:'ROI / Хугацаа',               fn:function(s){ return s.roi||''; }},
+  {key:'tech',      label:'Технологийн бэлэн байдал',    fn:function(s){ return s.tech||''; }},
+  {key:'supply',    label:'Нийлүүлэлт / Хангамж',       fn:function(s){ return s.supply||''; }},
+  {key:'esg',       label:'ESG',                          fn:function(s){ return s.esg||''; }},
+];
+var _activeQ=0;
+window.openQuestionView = async function(){
+  var all; try{ all=await loadAll(); }catch(e){ showToast('❌ '+e.message,3000); return; }
+  _cachedAll=all;
+  var picker=$id('qPicker');
+  picker.innerHTML='';
+  _qDefs.forEach(function(q,i){
+    var b=document.createElement('button');
+    b.className='q-btn'+(i===_activeQ?' active':'');
+    b.textContent=q.label;
+    b.onclick=function(){ _activeQ=i; renderQAnswers(all); picker.querySelectorAll('.q-btn').forEach(function(x,j){ x.classList.toggle('active',j===i); }); };
+    picker.appendChild(b);
+  });
+  renderQAnswers(all);
+  $id('questionModal').classList.add('open');
+};
+function renderQAnswers(all){
+  var q=_qDefs[_activeQ];
+  var html='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">'+esc(q.label)+' — '+all.length+' хариулт</div>';
+  all.forEach(function(s,i){
+    var ans=q.fn(s)||'—';
+    html+='<div class="q-answer-row"><div class="q-answer-name">'+(i+1)+'. '+esc(s.name||'—')+' <span style="font-weight:400;color:#6b7280">('+esc(s.dept||'—')+')</span></div><div class="q-answer-text">'+esc(ans)+'</div></div>';
+  });
+  $id('qAnswers').innerHTML=html;
+}
+
+/* ── admin: delete single record ── */
+window.deleteOne = async function(tsEnc, evt){
+  if(evt){ evt.stopPropagation(); }
+  var ts=decodeURIComponent(tsEnc);
+  var all; try{ all=await loadAll(); }catch(e){ showToast('❌ '+e.message,3000); return; }
+  var s=all.filter(function(x){ return x.ts===ts; })[0];
+  var name=s?s.name||'энэ санал':'энэ санал';
+  if(!confirm('"'+name+'" саналыг устгах уу?')) return;
+  var remaining=all.filter(function(x){ return x.ts!==ts; });
+  try{
+    await clearAll_remote();
+    for(var i=0;i<remaining.length;i++){ await saveRecord(remaining[i]); }
+    showToast('✅ Санал устгагдлаа');
+    renderAdmin();
+  }catch(e){
+    showToast('❌ Алдаа: '+e.message,4000);
   }
 };
 
