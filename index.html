@@ -136,6 +136,11 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 .sub-row-actions{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
 .btn-del-one{background:none;border:1px solid #fca5a5;color:#D85A30;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
 .btn-del-one:hover{background:#FAECE7}
+/* ── privacy toggle ── */
+.pii{transition:filter .2s,opacity .2s}
+body.hide-pii .pii{filter:blur(6px);opacity:.5;user-select:none;pointer-events:none}
+.eye-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;color:#374151;font-family:inherit;margin-bottom:10px;transition:all .15s}
+.eye-btn:hover{border-color:#1D9E75;color:#1D9E75}
 </style>
 </head>
 <body>
@@ -634,7 +639,8 @@ async function renderAdmin(){
   var sConds=Object.keys(cC).sort(function(a,b){ return cC[b]-cC[a]; });
   var rC={};all.forEach(function(s){ (s.risks||[]).forEach(function(r){ rC[r]=(rC[r]||0)+1; }); });
   var sRisks=Object.keys(rC).sort(function(a,b){ return rC[b]-rC[a]; });
-  var h='<div class="stat-grid"><div class="stat-card"><div class="stat-num">'+tc+'</div><div class="stat-lbl">Нийт санал</div></div><div class="stat-card"><div class="stat-num">'+(17-tc)+'</div><div class="stat-lbl">Үлдсэн гишүүн</div></div><div class="stat-card"><div class="stat-num">'+Math.round(tc/17*100)+'%</div><div class="stat-lbl">Оролцооны хувь</div></div><div class="stat-card"><div class="stat-num" style="font-size:16px">'+esc(topDept)+'</div><div class="stat-lbl">Идэвхтэй хэлтэс</div></div></div>';
+  var h='<button class="eye-btn" id="eyeBtn" onclick="togglePii()"><span id="eyeIcon">'+(typeof _hideIdentity!=='undefined'&&_hideIdentity?'🙈':'👁️')+'</span> <span id="eyeLabel">'+(typeof _hideIdentity!=='undefined'&&_hideIdentity?'Нэр нуугдсан — харуулах':'Нэр нуух')+'</span></button>';
+  h+='<div class="stat-grid"><div class="stat-card"><div class="stat-num">'+tc+'</div><div class="stat-lbl">Нийт санал</div></div><div class="stat-card"><div class="stat-num">'+(17-tc)+'</div><div class="stat-lbl">Үлдсэн гишүүн</div></div><div class="stat-card"><div class="stat-num">'+Math.round(tc/17*100)+'%</div><div class="stat-lbl">Оролцооны хувь</div></div><div class="stat-card"><div class="stat-num" style="font-size:16px"><span class="pii">'+esc(topDept)+'</span></div><div class="stat-lbl">Идэвхтэй хэлтэс</div></div></div>';
   h+='<div class="data-card"><div class="data-card-title">📊 Стратегийн чиглэлийн нэгтгэсэн эрэмбэ</div>';
   sorted.forEach(function(nm,i){ var p=Math.round(dS[nm]/maxS*100); h+='<div class="bar-row"><div class="bar-label"><span>'+(i+1)+'. '+esc(nm)+'</span><span class="bar-score">'+dS[nm]+' оноо</span></div><div class="bar-track"><div class="bar-fill-g" style="width:'+p+'%"></div></div></div>'; });
   h+='</div><div class="data-card"><div class="data-card-title">🔵 Бэлэн байдлын үнэлгээний дундаж</div>';
@@ -650,7 +656,7 @@ async function renderAdmin(){
     var sid=encodeURIComponent(s.ts||String(i));
     h+='<div class="sub-row">';
     h+='<div class="sub-row-tap" onclick="showDetail(\''+sid+'\')">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. '+esc(s.name||'—')+'</span><span style="font-size:11px;background:#f9fafb;padding:2px 8px;border-radius:10px;color:#6b7280">'+esc(s.dept||'—')+'</span></div>';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. <span class="pii">'+esc(s.name||'—')+'</span></span><span style="font-size:11px;background:#f9fafb;padding:2px 8px;border-radius:10px;color:#6b7280"><span class="pii">'+esc(s.dept||'—')+'</span></span></div>';
     if(s.project) h+='<div style="font-size:12px;color:#1D9E75;font-weight:600;margin-bottom:2px">📋 '+esc(s.project)+'</div>';
     if(s.idea) h+='<div style="font-size:12px;color:#6b7280;line-height:1.5">'+esc((s.idea||'').substring(0,100))+((s.idea||'').length>100?'…':'')+'</div>';
     h+='<div style="font-size:11px;color:#9ca3af;margin-top:2px">'+new Date(s.ts).toLocaleString('mn-MN')+' &nbsp;👆 Дэлгэрэнгүй харах</div>';
@@ -719,19 +725,27 @@ window.clearAll = async function(){
 
 /* ── admin: detail modal ── */
 var _cachedAll = null;
+var _hideIdentity = false;
+window.togglePii = function(){
+  _hideIdentity = !_hideIdentity;
+  document.body.classList.toggle('hide-pii', _hideIdentity);
+  var icon=$id('eyeIcon'), lbl=$id('eyeLabel');
+  if(icon){ icon.textContent=_hideIdentity?'🙈':'👁️'; }
+  if(lbl){ lbl.textContent=_hideIdentity?'Нэр нуугдсан — харуулах':'Нэр нуух'; }
+};
 window.closeModal = function(id){ $id(id).classList.remove('open'); };
 window.showDetail = async function(tsEnc){
   var ts=decodeURIComponent(tsEnc);
   var all; try{ all=await loadAll(); }catch(e){ showToast('❌ '+e.message,3000); return; }
   _cachedAll=all;
   var s=all.filter(function(x){ return x.ts===ts; })[0]; if(!s) return;
-  $id('detailTitle').textContent=(s.name||'—')+' · '+(s.dept||'—');
+  $id('detailTitle').innerHTML='<span class="pii">'+esc(s.name||'—')+'</span> · <span class="pii">'+esc(s.dept||'—')+'</span>';
   var condStr=(s.conds||[]).join(', ')+(s.condExtra?'\n+Нэмэлт: '+s.condExtra:'');
   var riskStr=(s.risks||[]).join(', ')+(s.riskExtra?'\n+Нэмэлт: '+s.riskExtra:'');
   var fields=[
     ['Огноо',new Date(s.ts).toLocaleString('mn-MN')],
-    ['Нэр / Албан тушаал',s.name],
-    ['Хэлтэс',s.dept],
+    ['Нэр / Албан тушаал','<span class="pii">'+esc(s.name||'')+'</span>',true],
+    ['Хэлтэс','<span class="pii">'+esc(s.dept||'')+'</span>',true],
     ['Санал болгож буй төслийн нэр',s.project],
     ['Чиглэлийн эрэмбэ',(s.ranking||[]).join('\n')],
     ['Бэлэн байдал',(s.matrix||[]).map(function(m){ return m.label+': '+(m.val?m.val+'/5':'—'); }).join('\n')],
@@ -752,7 +766,7 @@ window.showDetail = async function(tsEnc){
     ['Нэмэлт мэдээлэл',s.extra],
   ];
   var html='';
-  fields.forEach(function(f){ if(!f[1]) return; html+='<div class="detail-row"><div class="detail-key">'+esc(f[0])+'</div><div class="detail-val">'+esc(f[1])+'</div></div>'; });
+  fields.forEach(function(f){ if(!f[1]) return; var val=f[2]?f[1]:esc(f[1]); html+='<div class="detail-row"><div class="detail-key">'+esc(f[0])+'</div><div class="detail-val">'+val+'</div></div>'; });
   $id('detailBody').innerHTML=html;
   $id('detailModal').classList.add('open');
 };
@@ -797,7 +811,7 @@ function renderQAnswers(all){
   var html='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">'+esc(q.label)+' — '+all.length+' хариулт</div>';
   all.forEach(function(s,i){
     var ans=q.fn(s)||'—';
-    html+='<div class="q-answer-row"><div class="q-answer-name">'+(i+1)+'. '+esc(s.name||'—')+' <span style="font-weight:400;color:#6b7280">('+esc(s.dept||'—')+')</span></div><div class="q-answer-text">'+esc(ans)+'</div></div>';
+    html+='<div class="q-answer-row"><div class="q-answer-name">'+(i+1)+'. <span class="pii">'+esc(s.name||'—')+'</span> <span style="font-weight:400;color:#6b7280">(<span class="pii">'+esc(s.dept||'—')+'</span>)</span></div><div class="q-answer-text">'+esc(ans)+'</div></div>';
   });
   $id('qAnswers').innerHTML=html;
 }
