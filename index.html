@@ -11,7 +11,7 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 .view{display:none}.view.active{display:block}
 .sub-view{display:none}.sub-view.active{display:block}
 .nav-bar{display:flex;background:#fff;border-radius:10px 10px 0 0;border:1px solid #e5e7eb;border-bottom:none;overflow:hidden}
-.nav-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 6px;font-size:13px;font-weight:600;cursor:pointer;color:#6b7280;border-bottom:3px solid transparent;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.nav-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:13px 3px;font-size:12px;font-weight:600;cursor:pointer;color:#6b7280;border-bottom:3px solid transparent;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 .nav-tab.active{color:#1D9E75;border-bottom-color:#1D9E75;background:#f0fdf8}
 .nav-sep{height:1px;background:#e5e7eb;margin-bottom:14px}
 .app-header{background:linear-gradient(135deg,#085041,#0F6E56 60%,#1D9E75);border-radius:12px;padding:20px;margin-bottom:14px}
@@ -141,6 +141,35 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 body.hide-pii .pii{filter:blur(6px);opacity:.5;user-select:none;pointer-events:none}
 .eye-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;color:#374151;font-family:inherit;margin-bottom:10px;transition:all .15s}
 .eye-btn:hover{border-color:#1D9E75;color:#1D9E75}
+/* ── categorize tab ── */
+.cat-layout{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:600px){.cat-layout{grid-template-columns:1fr 235px;align-items:start}.proj-panel{position:sticky;top:10px}}
+.cat-zone{background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;transition:all .15s}
+.cat-zone:last-child{margin-bottom:0}
+.cat-zone.drag-over{border-color:#1D9E75;background:#f0fdf8;box-shadow:0 0 0 3px rgba(29,158,117,.18)}
+.cat-zone.tap-target{border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,.15);cursor:pointer}
+.cat-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.cat-title{font-size:13px;font-weight:700;color:#085041;line-height:1.4}
+.cat-badges{display:flex;gap:5px;flex-shrink:0}
+.cat-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:#e6f7f1;color:#085041;white-space:nowrap}
+.cat-badge.b2{background:#e8f1fa;color:#185FA5}
+.cat-cnt{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:#f3f4f6;color:#6b7280;white-space:nowrap}
+.cat-info-btn{background:none;border:none;font-size:11px;color:#185FA5;cursor:pointer;font-family:inherit;font-weight:600;padding:4px 0 0;-webkit-tap-highlight-color:transparent}
+.cat-info{display:none;font-size:11.5px;color:#374151;line-height:1.6;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:9px 11px;margin-top:7px}
+.cat-info.open{display:block}
+.cat-info b{color:#085041}
+.cat-drop{min-height:44px;border:1.5px dashed #d1d5db;border-radius:8px;margin-top:9px;padding:6px;display:flex;flex-wrap:wrap;gap:5px;align-items:flex-start}
+.cat-drop:empty::after{content:'⬇ Энд төсөл чирж оруулна';font-size:11px;color:#9ca3af;padding:6px 4px}
+.proj-chip{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1.5px solid #185FA5;color:#0c3a66;font-size:11.5px;font-weight:600;border-radius:16px;padding:6px 11px;cursor:grab;user-select:none;line-height:1.3;-webkit-tap-highlight-color:transparent;touch-action:none;max-width:100%;word-break:break-word}
+.proj-chip.in-zone{border-color:#1D9E75;color:#085041;background:#f0fdf8}
+.proj-chip.dragging{opacity:.35}
+.proj-chip.selected{background:#185FA5;color:#fff;border-color:#185FA5}
+.proj-chip .chip-x{font-size:11px;color:#D85A30;cursor:pointer;font-weight:700;padding:0 1px;flex-shrink:0}
+.proj-list-box{display:flex;flex-wrap:wrap;gap:6px;min-height:60px;border:1.5px dashed transparent;border-radius:8px;padding:2px;transition:all .15s}
+.proj-list-box.drag-over{border-color:#185FA5;background:#e8f1fa}
+.proj-list-box:empty::after{content:'🎉 Бүх төсөл ангилагдсан';font-size:12px;color:#6b7280;padding:6px}
+.cat-progress{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 13px;margin-bottom:10px}
+.cat-progress-lbl{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px}
 /* ── members anon badge ── */
 .anon-note{background:#f0fdf8;border:1px solid #b8e8d8;border-radius:10px;padding:10px 13px;font-size:12px;color:#085041;line-height:1.6;margin-bottom:12px}
 .anon-chip{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e6f7f1;color:#085041;font-size:11px;font-weight:700;flex-shrink:0}
@@ -154,6 +183,7 @@ body.hide-pii .pii{filter:blur(6px);opacity:.5;user-select:none;pointer-events:n
 <div class="nav-bar">
   <div class="nav-tab active" id="tabForm" onclick="switchMain('form')">✏️ Санал өгөх</div>
   <div class="nav-tab" id="tabMembers" onclick="switchMain('members')">👥 Гишүүд</div>
+  <div class="nav-tab" id="tabCat" onclick="switchMain('cat')">🗂 Ангилах</div>
   <div class="nav-tab" id="tabAdmin" onclick="switchMain('admin')">📊 Админ</div>
 </div>
 <div class="nav-sep"></div>
@@ -347,6 +377,11 @@ body.hide-pii .pii{filter:blur(6px);opacity:.5;user-select:none;pointer-events:n
   <div id="membersContent"></div>
 </div>
 
+<!-- ══ CATEGORIZE ══ -->
+<div id="mainCat" class="sub-view">
+  <div id="catContent"></div>
+</div>
+
 <!-- ══ ADMIN ══ -->
 <div id="mainAdmin" class="sub-view">
   <div id="adminLock">
@@ -468,12 +503,15 @@ window.goPage = function(n){
 window.switchMain = function(which){
   $id('tabForm').classList.toggle('active',which==='form');
   $id('tabMembers').classList.toggle('active',which==='members');
+  $id('tabCat').classList.toggle('active',which==='cat');
   $id('tabAdmin').classList.toggle('active',which==='admin');
   $id('mainForm').classList.toggle('active',which==='form');
   $id('mainMembers').classList.toggle('active',which==='members');
+  $id('mainCat').classList.toggle('active',which==='cat');
   $id('mainAdmin').classList.toggle('active',which==='admin');
   if(which==='admin' && _adminUnlocked) renderAdmin();
   if(which==='members') renderMembers();
+  if(which==='cat') renderCategorize();
 };
 window.toggleCh = function(el){ el.classList.toggle('sel'); };
 window.addPfRow = function(){
@@ -891,6 +929,168 @@ window.deleteOne = async function(tsEnc, evt){
     showToast('❌ Алдаа: '+e.message,4000);
   }
 };
+
+/* ═══════════════════════════════════════════════
+   CATEGORIZE TAB — Ангилах
+   Зурагт үзүүлсэн 7 категори · drag & drop / tap
+   Ангилал тухайн төхөөрөмжийн localStorage-д хадгалагдана
+   ═══════════════════════════════════════════════ */
+var _catDefs=[
+  {key:'func', title:'Функциональ хүнс', share:'32%', cagr:'8.50%',
+   crit:['Health claim — нотолгоотой эрүүл мэндийн мэдэгдэл байх','Витамин, эрдэс, пробиотик, пребиотик нэмсэн байх','FDA, EFSA зэрэг зохицуулалтын байгуулагаар баталгаажсан','Дан хоол тэжээлээс давсан нэмэлт үр нөлөөтэй байх'],
+   ex:'Пробиотик йогурт · Омега-3 ундаа · Иммун дэмжих жүүс · Коллаген нэмэлттэй ус'},
+  {key:'natural', title:'Байгалийн / Цэвэр хүнс', share:'28%', cagr:'7.80%',
+   crit:['Clean label — найрлага цөөн, ойлгомжтой байх','Хиймэл өнгө, амт, хадгалагч бодисгүй байх','Боловсруулалт хамгийн бага (minimal processing)','GMO-гүй, химийн нэмэлтгүй байх'],
+   ex:'Боловсруулаагүй тариалан · Дарс, сирроп · Байгалийн жимсний шүүс · Туршилтгүй сүүн бүтээгдэхүүн'},
+  {key:'organic', title:'Органик хүнс', share:'12%', cagr:'10.20%',
+   crit:['USDA Organic, EU Organic гэрчилгээтэй байх','Нийлэг пестицид, хиймэл бордоогүй тариалалт','GMO-гүй, цацраг туяагаар боловсруулаагүй байх','Амьтны гаралтай бол органик тэжээлтэй байх'],
+   ex:'Органик сүү, йогурт · Органик жимс ногоо · Органик будаа, гурил · Органик мах, өндөг'},
+  {key:'bfy', title:'BFY (сайжруулсан) хүнс', share:'11%', cagr:'9.10%',
+   crit:['Сахар, давс, тосыг 25%+ бууруулсан байх','Калори бага боловч амт, текстур хадгалсан байх','\u0027Better-for-you\u0027 шошготой, ойлгомжтой байх','Өдөр тутмын хоолны дэглэмд хялбар орох'],
+   ex:'Сахаргүй газтай ус · Бага тостой чипс · Давс багатай жигнэмэг · Лайт цагаан тэжээл'},
+  {key:'plant', title:'Ургамлын гаралтай', share:'8%', cagr:'12.40%',
+   crit:['Амьтны гаралтай бүрэлдэхүүнгүй (vegan баталгаа)','Уургийн агуулга хангалттай (≥5г/тэнцүү)','Тогтвортой эх үүсвэрийн баталгаатай байх','Амт, бүтэц нь бодит бүтээгдэхүүнд ойр байх'],
+   ex:'Буурцагны сүү, тофу · Ургамлын уургийн нунтаг · Vegan бургер · Кешью, овъёосны сүү'},
+  {key:'special', title:'Тусгай зориулалтын хүнс', share:'5%', cagr:'9.70%',
+   crit:['Нийш зах зээл (niche segment) — тодорхой хэрэглэгчдэд чиглэсэн','Зорилтот сегментийн хэрэгцээнд нарийн нийцсэн байх','Өрсөлдөгч бага, брэндийн ялгарал өндөр байх','Хэрэглэгчийн өвөрмөц идентитэйтэй холбогдох'],
+   ex:'Тамирчны уургийн бар · Keto диетийн хүнс · Sporty энерги ундаа · Дасгал дараах нөхөн сэргэлтийн хоол'},
+  {key:'diet', title:'Диет / Эмнэлгийн хүнс', share:'4%', cagr:'6.50%',
+   crit:['Эмнэлгийн оношлогоотой хүмүүст зориулсан байх','Аллерген, глютен, лактозоос ангид байх','Гликемийн индекс (GI) бага байх','Эмч, диетологичийн зөвлөмжтэй нийцсэн байх'],
+   ex:'Глютенгүй талх · Чихрийн шижингийн хоол · Лактозгүй сүү · Аллергигүй нарийн боов'}
+];
+var _catAssign={};   /* ts -> category key */
+var _catAll=null;
+var _dragTs=null, _selTs=null;
+function loadAssign(){ try{ _catAssign=JSON.parse(localStorage.getItem('mfc3_cat')||'{}')||{}; }catch(e){ _catAssign={}; } }
+function saveAssign(){ try{ localStorage.setItem('mfc3_cat',JSON.stringify(_catAssign)); }catch(e){} }
+function projLabel(s,i){ return (s.project&&s.project.trim()) ? s.project : ('Төсөл нэргүй #'+(i+1)); }
+async function renderCategorize(){
+  var el=$id('catContent');
+  el.innerHTML='<div class="loading">⏳ Ачааллаж байна...</div>';
+  var all;
+  try{ all=await loadAll(); }catch(e){ el.innerHTML='<div class="loading">❌ Дата уншиж чадсангүй: '+e.message+'</div>'; return; }
+  if(!all.length){ el.innerHTML='<div class="loading">📭 Одоогоор ирүүлсэн санал байхгүй байна</div>'; return; }
+  _catAll=all;
+  loadAssign();
+  /* устгагдсан саналын хуучин ангиллыг цэвэрлэх */
+  Object.keys(_catAssign).forEach(function(ts){ if(!all.some(function(s){ return s.ts===ts; })) delete _catAssign[ts]; });
+  saveAssign();
+  buildCatUI();
+}
+function chipHTML(s,i,inZone){
+  var tsa=encodeURIComponent(s.ts||String(i));
+  return '<span class="proj-chip'+(inZone?' in-zone':'')+'" draggable="true" data-ts="'+tsa+'" onclick="chipTap(event,this)" title="'+esc(s.dept||'')+'">'
+    +esc(projLabel(s,i))
+    +(inZone?' <span class="chip-x" onclick="chipRemove(event,this)" title="Жагсаалт руу буцаах">✕</span>':'')
+    +'</span>';
+}
+function buildCatUI(){
+  var all=_catAll||[], el=$id('catContent');
+  var assigned=all.filter(function(s){ return !!_catAssign[s.ts]; }).length;
+  var pct=all.length?Math.round(assigned/all.length*100):0;
+  var h='<div class="cat-progress"><div class="cat-progress-lbl"><span>🗂 Ангилсан төсөл</span><span>'+assigned+' / '+all.length+'</span></div><div class="bar-track"><div class="bar-fill-g" style="width:'+pct+'%"></div></div></div>';
+  h+='<div class="cat-layout"><div>';
+  _catDefs.forEach(function(cat){
+    var cnt=all.filter(function(s){ return _catAssign[s.ts]===cat.key; }).length;
+    h+='<div class="cat-zone" data-cat="'+cat.key+'" ondragover="catDragOver(event,this)" ondragleave="this.classList.remove(\'drag-over\')" ondrop="catDrop(event,this)" onclick="catZoneTap(this)">';
+    h+='<div class="cat-head"><div class="cat-title">'+esc(cat.title)+'</div><div class="cat-badges"><span class="cat-badge">Хувь '+cat.share+'</span><span class="cat-badge b2">CAGR '+cat.cagr+'</span><span class="cat-cnt">'+cnt+' төсөл</span></div></div>';
+    h+='<button class="cat-info-btn" onclick="toggleCatInfo(event,this)">ⓘ Үндсэн шалгуур / жишээ бүтээгдэхүүн</button>';
+    h+='<div class="cat-info"><b>Үндсэн шалгуур / ойлголт:</b><br>'+cat.crit.map(function(c){ return '• '+esc(c); }).join('<br>')+'<br><br><b>Жишээ бүтээгдэхүүн:</b> '+esc(cat.ex)+'</div>';
+    h+='<div class="cat-drop">';
+    all.forEach(function(s,i){ if(_catAssign[s.ts]===cat.key) h+=chipHTML(s,i,true); });
+    h+='</div></div>';
+  });
+  h+='</div><div class="proj-panel"><div class="data-card" style="margin-bottom:0"><div class="data-card-title">📦 Төслийн жагсаалт</div>';
+  h+='<div style="font-size:11px;color:#6b7280;line-height:1.5;margin-bottom:8px">Төслийг ангилал руу <b>чирнэ</b>, эсвэл төсөл дээр <b>товшоод</b> дараа нь ангилал дээр товшино.</div>';
+  h+='<div class="proj-list-box" id="projListBox" ondragover="catDragOver(event,this)" ondragleave="this.classList.remove(\'drag-over\')" ondrop="catDropList(event,this)">';
+  all.forEach(function(s,i){ if(!_catAssign[s.ts]) h+=chipHTML(s,i,false); });
+  h+='</div><button class="btn btn-full" style="margin-top:10px" onclick="catReset()">↺ Ангиллыг цэвэрлэх</button></div></div></div>';
+  el.innerHTML=h;
+  initChipDrag();
+}
+function assignTo(ts,cat){
+  if(cat) _catAssign[ts]=cat; else delete _catAssign[ts];
+  saveAssign(); _selTs=null; buildCatUI();
+}
+window.toggleCatInfo=function(e,btn){ e.stopPropagation(); btn.nextElementSibling.classList.toggle('open'); };
+window.catDragOver=function(e,zone){ e.preventDefault(); zone.classList.add('drag-over'); };
+window.catDrop=function(e,zone){
+  e.preventDefault(); zone.classList.remove('drag-over');
+  if(_dragTs){ assignTo(_dragTs,zone.dataset.cat); _dragTs=null; }
+};
+window.catDropList=function(e,box){
+  e.preventDefault(); box.classList.remove('drag-over');
+  if(_dragTs){ assignTo(_dragTs,null); _dragTs=null; }
+};
+window.chipTap=function(e,chip){
+  e.stopPropagation();
+  var ts=decodeURIComponent(chip.dataset.ts);
+  _selTs=(_selTs===ts)?null:ts;
+  document.querySelectorAll('#catContent .proj-chip').forEach(function(c){ c.classList.toggle('selected',decodeURIComponent(c.dataset.ts)===_selTs); });
+  document.querySelectorAll('#catContent .cat-zone').forEach(function(z){ z.classList.toggle('tap-target',!!_selTs); });
+};
+window.catZoneTap=function(zone){ if(_selTs) assignTo(_selTs,zone.dataset.cat); };
+window.chipRemove=function(e,x){
+  e.stopPropagation();
+  var chip=x.closest('.proj-chip');
+  assignTo(decodeURIComponent(chip.dataset.ts),null);
+};
+window.catReset=function(){
+  if(!confirm('Бүх ангиллыг цэвэрлэж, төслүүдийг жагсаалт руу буцаах уу?')) return;
+  _catAssign={}; saveAssign(); buildCatUI();
+};
+/* chip drag — desktop + touch */
+var _tClone=null,_tTs=null,_tChip=null;
+function initChipDrag(){
+  document.querySelectorAll('#catContent .proj-chip').forEach(function(c){
+    c.addEventListener('dragstart',function(){
+      _dragTs=decodeURIComponent(c.dataset.ts);
+      c.classList.add('dragging');
+    });
+    c.addEventListener('dragend',function(){
+      c.classList.remove('dragging');
+      document.querySelectorAll('#catContent .drag-over').forEach(function(x){ x.classList.remove('drag-over'); });
+    });
+    c.addEventListener('touchstart',function(e){
+      _tChip=c; _tTs=decodeURIComponent(c.dataset.ts);
+      var r=c.getBoundingClientRect();
+      _tClone=c.cloneNode(true);
+      _tClone.style.cssText='position:fixed;z-index:9999;pointer-events:none;opacity:.9;left:'+r.left+'px;top:'+r.top+'px;background:#fff;border:2px solid #1D9E75;border-radius:16px;padding:6px 11px;font-size:11.5px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.25)';
+      _tClone.classList.remove('selected');
+      document.body.appendChild(_tClone);
+      c.classList.add('dragging');
+    },{passive:true});
+  });
+  document.addEventListener('touchmove',chipTouchMove,{passive:false});
+  document.addEventListener('touchend',chipTouchEnd,{passive:true});
+}
+function chipTouchMove(e){
+  if(!_tClone) return;
+  e.preventDefault();
+  var t=e.touches[0];
+  _tClone.style.left=(t.clientX-45)+'px';
+  _tClone.style.top=(t.clientY-22)+'px';
+  var el=document.elementFromPoint(t.clientX,t.clientY);
+  var zone=el?el.closest('.cat-zone'):null;
+  var box=el?el.closest('#projListBox'):null;
+  document.querySelectorAll('#catContent .drag-over').forEach(function(x){ x.classList.remove('drag-over'); });
+  if(zone) zone.classList.add('drag-over');
+  else if(box) box.classList.add('drag-over');
+}
+function chipTouchEnd(e){
+  if(!_tClone) return;
+  var t=e.changedTouches[0];
+  var el=document.elementFromPoint(t.clientX,t.clientY);
+  var zone=el?el.closest('.cat-zone'):null;
+  var box=el?el.closest('#projListBox'):null;
+  document.body.removeChild(_tClone); _tClone=null;
+  if(_tChip) _tChip.classList.remove('dragging');
+  document.querySelectorAll('#catContent .drag-over').forEach(function(x){ x.classList.remove('drag-over'); });
+  var moved = zone || box;
+  if(zone && _tTs) assignTo(_tTs,zone.dataset.cat);
+  else if(box && _tTs && _tChip && _tChip.classList.contains('in-zone')) assignTo(_tTs,null);
+  _tChip=null; _tTs=null;
+}
 
 /* ── init ── */
 initDrag();
