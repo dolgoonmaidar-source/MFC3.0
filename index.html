@@ -11,7 +11,7 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 .view{display:none}.view.active{display:block}
 .sub-view{display:none}.sub-view.active{display:block}
 .nav-bar{display:flex;background:#fff;border-radius:10px 10px 0 0;border:1px solid #e5e7eb;border-bottom:none;overflow:hidden}
-.nav-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 8px;font-size:13px;font-weight:600;cursor:pointer;color:#6b7280;border-bottom:3px solid transparent;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.nav-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 6px;font-size:13px;font-weight:600;cursor:pointer;color:#6b7280;border-bottom:3px solid transparent;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
 .nav-tab.active{color:#1D9E75;border-bottom-color:#1D9E75;background:#f0fdf8}
 .nav-sep{height:1px;background:#e5e7eb;margin-bottom:14px}
 .app-header{background:linear-gradient(135deg,#085041,#0F6E56 60%,#1D9E75);border-radius:12px;padding:20px;margin-bottom:14px}
@@ -141,6 +141,9 @@ html,body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111827;ba
 body.hide-pii .pii{filter:blur(6px);opacity:.5;user-select:none;pointer-events:none}
 .eye-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;color:#374151;font-family:inherit;margin-bottom:10px;transition:all .15s}
 .eye-btn:hover{border-color:#1D9E75;color:#1D9E75}
+/* ── members anon badge ── */
+.anon-note{background:#f0fdf8;border:1px solid #b8e8d8;border-radius:10px;padding:10px 13px;font-size:12px;color:#085041;line-height:1.6;margin-bottom:12px}
+.anon-chip{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e6f7f1;color:#085041;font-size:11px;font-weight:700;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -150,6 +153,7 @@ body.hide-pii .pii{filter:blur(6px);opacity:.5;user-select:none;pointer-events:n
 <!-- NAV -->
 <div class="nav-bar">
   <div class="nav-tab active" id="tabForm" onclick="switchMain('form')">✏️ Санал өгөх</div>
+  <div class="nav-tab" id="tabMembers" onclick="switchMain('members')">👥 Гишүүд</div>
   <div class="nav-tab" id="tabAdmin" onclick="switchMain('admin')">📊 Админ</div>
 </div>
 <div class="nav-sep"></div>
@@ -338,6 +342,11 @@ body.hide-pii .pii{filter:blur(6px);opacity:.5;user-select:none;pointer-events:n
 
 </div><!-- /mainForm -->
 
+<!-- ══ MEMBERS (anonymous, read-only) ══ -->
+<div id="mainMembers" class="sub-view">
+  <div id="membersContent"></div>
+</div>
+
 <!-- ══ ADMIN ══ -->
 <div id="mainAdmin" class="sub-view">
   <div id="adminLock">
@@ -458,10 +467,13 @@ window.goPage = function(n){
 };
 window.switchMain = function(which){
   $id('tabForm').classList.toggle('active',which==='form');
+  $id('tabMembers').classList.toggle('active',which==='members');
   $id('tabAdmin').classList.toggle('active',which==='admin');
   $id('mainForm').classList.toggle('active',which==='form');
+  $id('mainMembers').classList.toggle('active',which==='members');
   $id('mainAdmin').classList.toggle('active',which==='admin');
   if(which==='admin' && _adminUnlocked) renderAdmin();
+  if(which==='members') renderMembers();
 };
 window.toggleCh = function(el){ el.classList.toggle('sel'); };
 window.addPfRow = function(){
@@ -618,9 +630,11 @@ window.doDownloadPDF = function(){
   showToast('📄 Файл татагдлаа — нээгээд Print → PDF');
 };
 
-/* ── admin render ── */
-async function renderAdmin(){
-  var el=$id('adminContent');
+/* ═══════════════════════════════════════════════
+   SHARED DASHBOARD BUILDER (admin + members)
+   anon=true → нэргүй, устгах/татах товчгүй
+   ═══════════════════════════════════════════════ */
+async function renderDashboard(el, anon){
   el.innerHTML='<div class="loading">⏳ Ачааллаж байна...</div>';
   var all;
   try{ all=await loadAll(); }catch(e){ el.innerHTML='<div class="loading">❌ Дата уншиж чадсангүй: '+e.message+'</div>'; return; }
@@ -639,8 +653,18 @@ async function renderAdmin(){
   var sConds=Object.keys(cC).sort(function(a,b){ return cC[b]-cC[a]; });
   var rC={};all.forEach(function(s){ (s.risks||[]).forEach(function(r){ rC[r]=(rC[r]||0)+1; }); });
   var sRisks=Object.keys(rC).sort(function(a,b){ return rC[b]-rC[a]; });
-  var h='<button class="eye-btn" id="eyeBtn" onclick="togglePii()"><span id="eyeIcon">'+(typeof _hideIdentity!=='undefined'&&_hideIdentity?'🙈':'👁️')+'</span> <span id="eyeLabel">'+(typeof _hideIdentity!=='undefined'&&_hideIdentity?'Нэр нуугдсан — харуулах':'Нэр нуух')+'</span></button>';
-  h+='<div class="stat-grid"><div class="stat-card"><div class="stat-num">'+tc+'</div><div class="stat-lbl">Нийт санал</div></div><div class="stat-card"><div class="stat-num">'+(17-tc)+'</div><div class="stat-lbl">Үлдсэн гишүүн</div></div><div class="stat-card"><div class="stat-num">'+Math.round(tc/17*100)+'%</div><div class="stat-lbl">Оролцооны хувь</div></div><div class="stat-card"><div class="stat-num" style="font-size:16px"><span class="pii">'+esc(topDept)+'</span></div><div class="stat-lbl">Идэвхтэй хэлтэс</div></div></div>';
+  var h='';
+  if(anon){
+    h+='<div class="anon-note">👥 <strong>Гишүүдийн нээлттэй хэсэг</strong> — бүх санал нэргүйгээр харагдана. Хариултууд "Гишүүн 1, 2, 3…" гэсэн дугаараар л ялгагдана.</div>';
+  } else {
+    h+='<button class="eye-btn" id="eyeBtn" onclick="togglePii()"><span id="eyeIcon">'+(_hideIdentity?'🙈':'👁️')+'</span> <span id="eyeLabel">'+(_hideIdentity?'Нэр нуугдсан — харуулах':'Нэр нуух')+'</span></button>';
+  }
+  h+='<div class="stat-grid"><div class="stat-card"><div class="stat-num">'+tc+'</div><div class="stat-lbl">Нийт санал</div></div><div class="stat-card"><div class="stat-num">'+(17-tc)+'</div><div class="stat-lbl">Үлдсэн гишүүн</div></div><div class="stat-card"><div class="stat-num">'+Math.round(tc/17*100)+'%</div><div class="stat-lbl">Оролцооны хувь</div></div>';
+  if(anon){
+    h+='<div class="stat-card"><div class="stat-num" style="font-size:16px">06/09</div><div class="stat-lbl">Retreat 2026 HY</div></div></div>';
+  } else {
+    h+='<div class="stat-card"><div class="stat-num" style="font-size:16px"><span class="pii">'+esc(topDept)+'</span></div><div class="stat-lbl">Идэвхтэй хэлтэс</div></div></div>';
+  }
   h+='<div class="data-card"><div class="data-card-title">📊 Стратегийн чиглэлийн нэгтгэсэн эрэмбэ</div>';
   sorted.forEach(function(nm,i){ var p=Math.round(dS[nm]/maxS*100); h+='<div class="bar-row"><div class="bar-label"><span>'+(i+1)+'. '+esc(nm)+'</span><span class="bar-score">'+dS[nm]+' оноо</span></div><div class="bar-track"><div class="bar-fill-g" style="width:'+p+'%"></div></div></div>'; });
   h+='</div><div class="data-card"><div class="data-card-title">🔵 Бэлэн байдлын үнэлгээний дундаж</div>';
@@ -655,18 +679,35 @@ async function renderAdmin(){
   all.forEach(function(s,i){
     var sid=encodeURIComponent(s.ts||String(i));
     h+='<div class="sub-row">';
-    h+='<div class="sub-row-tap" onclick="showDetail(\''+sid+'\')">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. <span class="pii">'+esc(s.name||'—')+'</span></span><span style="font-size:11px;background:#f9fafb;padding:2px 8px;border-radius:10px;color:#6b7280"><span class="pii">'+esc(s.dept||'—')+'</span></span></div>';
+    h+='<div class="sub-row-tap" onclick="showDetail(\''+sid+'\','+(anon?(i+1):'null')+')">';
+    if(anon){
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:7px"><span class="anon-chip">'+(i+1)+'</span> Гишүүн '+(i+1)+'</span></div>';
+    } else {
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:13px;font-weight:700">'+(i+1)+'. <span class="pii">'+esc(s.name||'—')+'</span></span><span style="font-size:11px;background:#f9fafb;padding:2px 8px;border-radius:10px;color:#6b7280"><span class="pii">'+esc(s.dept||'—')+'</span></span></div>';
+    }
     if(s.project) h+='<div style="font-size:12px;color:#1D9E75;font-weight:600;margin-bottom:2px">📋 '+esc(s.project)+'</div>';
     if(s.idea) h+='<div style="font-size:12px;color:#6b7280;line-height:1.5">'+esc((s.idea||'').substring(0,100))+((s.idea||'').length>100?'…':'')+'</div>';
     h+='<div style="font-size:11px;color:#9ca3af;margin-top:2px">'+new Date(s.ts).toLocaleString('mn-MN')+' &nbsp;👆 Дэлгэрэнгүй харах</div>';
     h+='</div>';
-    h+='<div class="sub-row-actions"><span></span><button class="btn-del-one" onclick="deleteOne(\''+sid+'\',event)">🗑 Устгах</button></div>';
+    if(!anon){
+      h+='<div class="sub-row-actions"><span></span><button class="btn-del-one" onclick="deleteOne(\''+sid+'\',event)">🗑 Устгах</button></div>';
+    }
     h+='</div>';
   });
-  h+='</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><button class="btn btn-blue" onclick="exportCSV()">⬇️ CSV татах</button><button class="btn btn-primary" onclick="openQuestionView()">📋 Асуулт харах</button><button class="btn btn-danger" onclick="clearAll()">🗑️ Бүгдийг устгах</button></div>';
+  h+='</div>';
+  if(anon){
+    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><button class="btn btn-primary" onclick="openQuestionView(true)">📋 Асуулт харах</button></div>';
+  } else {
+    h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><button class="btn btn-blue" onclick="exportCSV()">⬇️ CSV татах</button><button class="btn btn-primary" onclick="openQuestionView(false)">📋 Асуулт харах</button><button class="btn btn-danger" onclick="clearAll()">🗑️ Бүгдийг устгах</button></div>';
+  }
   el.innerHTML=h;
 }
+
+/* ── admin render ── */
+function renderAdmin(){ renderDashboard($id('adminContent'), false); }
+
+/* ── members render (anonymous, read-only) ── */
+function renderMembers(){ renderDashboard($id('membersContent'), true); }
 
 window.exportCSV = async function(){
   var all;
@@ -734,18 +775,28 @@ window.togglePii = function(){
   if(lbl){ lbl.textContent=_hideIdentity?'Нэр нуугдсан — харуулах':'Нэр нуух'; }
 };
 window.closeModal = function(id){ $id(id).classList.remove('open'); };
-window.showDetail = async function(tsEnc){
+/* anonIdx: null → админ горим (нэртэй), тоо → "Гишүүн N" нэргүй горим */
+window.showDetail = async function(tsEnc, anonIdx){
   var ts=decodeURIComponent(tsEnc);
   var all; try{ all=await loadAll(); }catch(e){ showToast('❌ '+e.message,3000); return; }
   _cachedAll=all;
   var s=all.filter(function(x){ return x.ts===ts; })[0]; if(!s) return;
-  $id('detailTitle').innerHTML='<span class="pii">'+esc(s.name||'—')+'</span> · <span class="pii">'+esc(s.dept||'—')+'</span>';
+  var anon = (anonIdx!==null && anonIdx!==undefined);
+  if(anon){
+    $id('detailTitle').textContent='Гишүүн '+anonIdx;
+  } else {
+    $id('detailTitle').innerHTML='<span class="pii">'+esc(s.name||'—')+'</span> · <span class="pii">'+esc(s.dept||'—')+'</span>';
+  }
   var condStr=(s.conds||[]).join(', ')+(s.condExtra?'\n+Нэмэлт: '+s.condExtra:'');
   var riskStr=(s.risks||[]).join(', ')+(s.riskExtra?'\n+Нэмэлт: '+s.riskExtra:'');
   var fields=[
     ['Огноо',new Date(s.ts).toLocaleString('mn-MN')],
-    ['Нэр / Албан тушаал','<span class="pii">'+esc(s.name||'')+'</span>',true],
-    ['Хэлтэс','<span class="pii">'+esc(s.dept||'')+'</span>',true],
+  ];
+  if(!anon){
+    fields.push(['Нэр / Албан тушаал','<span class="pii">'+esc(s.name||'')+'</span>',true]);
+    fields.push(['Хэлтэс','<span class="pii">'+esc(s.dept||'')+'</span>',true]);
+  }
+  fields=fields.concat([
     ['Санал болгож буй төслийн нэр',s.project],
     ['Чиглэлийн эрэмбэ',(s.ranking||[]).join('\n')],
     ['Бэлэн байдал',(s.matrix||[]).map(function(m){ return m.label+': '+(m.val?m.val+'/5':'—'); }).join('\n')],
@@ -764,7 +815,7 @@ window.showDetail = async function(tsEnc){
     ['Нийлүүлэлт / Хангамж',s.supply],
     ['ESG',s.esg],
     ['Нэмэлт мэдээлэл',s.extra],
-  ];
+  ]);
   var html='';
   fields.forEach(function(f){ if(!f[1]) return; var val=f[2]?f[1]:esc(f[1]); html+='<div class="detail-row"><div class="detail-key">'+esc(f[0])+'</div><div class="detail-val">'+val+'</div></div>'; });
   $id('detailBody').innerHTML=html;
@@ -791,7 +842,9 @@ var _qDefs=[
   {key:'esg',       label:'ESG',                          fn:function(s){ return s.esg||''; }},
 ];
 var _activeQ=0;
-window.openQuestionView = async function(){
+var _qAnon=false;
+window.openQuestionView = async function(anon){
+  _qAnon = !!anon;
   var all; try{ all=await loadAll(); }catch(e){ showToast('❌ '+e.message,3000); return; }
   _cachedAll=all;
   var picker=$id('qPicker');
@@ -811,7 +864,11 @@ function renderQAnswers(all){
   var html='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">'+esc(q.label)+' — '+all.length+' хариулт</div>';
   all.forEach(function(s,i){
     var ans=q.fn(s)||'—';
-    html+='<div class="q-answer-row"><div class="q-answer-name">'+(i+1)+'. <span class="pii">'+esc(s.name||'—')+'</span> <span style="font-weight:400;color:#6b7280">(<span class="pii">'+esc(s.dept||'—')+'</span>)</span></div><div class="q-answer-text">'+esc(ans)+'</div></div>';
+    if(_qAnon){
+      html+='<div class="q-answer-row"><div class="q-answer-name">'+(i+1)+'. Гишүүн '+(i+1)+'</div><div class="q-answer-text">'+esc(ans)+'</div></div>';
+    } else {
+      html+='<div class="q-answer-row"><div class="q-answer-name">'+(i+1)+'. <span class="pii">'+esc(s.name||'—')+'</span> <span style="font-weight:400;color:#6b7280">(<span class="pii">'+esc(s.dept||'—')+'</span>)</span></div><div class="q-answer-text">'+esc(ans)+'</div></div>';
+    }
   });
   $id('qAnswers').innerHTML=html;
 }
